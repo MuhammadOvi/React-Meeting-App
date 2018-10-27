@@ -1,0 +1,32 @@
+.slick-dots li button:before {
+  background: black;
+  border-radius: 50%;
+}
+
+.ant-card-meta-title {
+  margin-top: 20px;
+}
+
+/* 
+.slick-prev, 
+.slick-next {
+  top: 325px !important;
+  z-index: 100 !important;
+  background: rgba(0, 0, 0, 0.1) !important;
+  border-radius: 50%;
+  height: 36px !important;
+  width: 36px !important;
+}
+
+.slick-prev {
+  left: 5px !important;
+}
+
+.slick-next {
+  right: 5px !important;
+}
+
+.slick-prev:before, .slick-next:before {
+  font-size: 30px !important;
+  line-height: 40px !important;
+} */

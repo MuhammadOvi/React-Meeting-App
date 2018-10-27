@@ -1,0 +1,105 @@
+.login-screen-header {
+  text-align: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  border-radius: 5px;
+  height: 50%;
+  background-image: url('../../sources/img/login-background.jpg');
+  background-size: cover;
+  background-repeat: no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-screen-bg-overlay {
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: #212121;
+  height: 100%;
+  width: 100%;
+  opacity: .7;
+}
+
+.login-screen-header-logo {
+  height: 100px;
+  z-index: 2;
+}
+
+.login-screen-header-logo img {
+  height: 100%;
+  margin-top: -20%;
+}
+
+.login-screen-header-logo h2 {
+  font-weight: lighter;
+  color: white;
+}
+
+.login-screen-section {
+  text-align: center;
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  border-radius: 5px;
+  height: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #212121;
+  font-size: .9em;
+}
+
+.loginBtn--facebook {
+  box-sizing: border-box;
+  position: relative;
+  /* width: 13em;  - apply for fixed size */
+  margin: 0.2em;
+  padding: 5px 15px 5px 46px;
+  border: none;
+  text-align: left;
+  line-height: 34px;
+  white-space: nowrap;
+  border-radius: 0.3em;
+  font-size: 16px;
+  color: #FFF;
+  background-color: #4C69BA;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+}
+
+.loginBtn--facebook:before {
+  content: "";
+  box-sizing: border-box;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/14082/icon_facebook.png') 10px 10px no-repeat;
+  width: 34px;
+  height: 100%;
+}
+
+.loginBtn--facebook:focus {
+  outline: none;
+}
+
+.loginBtn--facebook:active {
+  box-shadow: inset 0 0 0 32px rgba(0,0,0,0.1);
+}
+
+.loginBtn--facebook:hover,
+.loginBtn--facebook:focus {
+  background-color: #5B7BD5;
+}
+
+.loginBtn--facebook:disabled {
+  background-color: rgb(103, 107, 119);
+  cursor: not-allowed;
+}
