@@ -2,11 +2,10 @@
 import React, { Component } from 'react';
 import './style.css';
 import PropTypes from 'prop-types';
-import { Button, message as Message, Icon, DatePicker } from 'antd';
+import { Button, Icon, DatePicker } from 'antd';
 import moment from 'moment-timezone';
 import firebase from '../../Config/firebase';
 
-const Users = firebase.firestore().collection('Users');
 const Meetings = firebase.firestore().collection('Meetings');
 
 function disabledDate(current) {
@@ -22,7 +21,6 @@ class MeetingTime extends Component {
       btnLoading: false,
       date: '',
       meeting: {},
-      meetings: {},
       meetingSet: false,
       screenLoading: true,
       time: '',

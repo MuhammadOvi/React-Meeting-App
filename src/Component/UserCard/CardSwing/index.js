@@ -10,6 +10,10 @@ import StackCard from '../StackCard';
 const { confirm } = Modal;
 
 class CardSwing extends Component {
+  componentDidMount() {
+    console.clear();
+  }
+
   swiped = (e, index) => {
     let agreed;
 
@@ -28,7 +32,14 @@ class CardSwing extends Component {
   };
 
   showConfirm = index => {
-    const { matchingUsers, history } = this.props;
+    const {
+      history,
+      history: {
+        location: {
+          state: { matchingUsers },
+        },
+      },
+    } = this.props;
 
     confirm({
       cancelText: 'No',
@@ -46,31 +57,41 @@ class CardSwing extends Component {
   };
 
   render() {
-    const { matchingUsers } = this.props;
+    const {
+      history: {
+        location: {
+          state: { matchingUsers },
+        },
+      },
+    } = this.props;
 
     return (
-      <div>
-        <Swing
-          config={{
-            allowedDirections: [Direction.LEFT, Direction.RIGHT],
-          }}
-          className="stack"
-          tagName="div"
-        >
-          {matchingUsers.map((user, index) => (
-            <div
-              key={Math.random()}
-              className={`card card-${index}`}
-              throwout={e => this.swiped(e, index)}
-            >
-              <StackCard
-                user={user}
-                index={index}
-                btnClicked={this.btnClicked}
-              />
-            </div>
-          ))}
-        </Swing>
+      <div className="section">
+        {matchingUsers ? (
+          <Swing
+            config={{
+              allowedDirections: [Direction.LEFT, Direction.RIGHT],
+            }}
+            className="stack"
+            tagName="div"
+          >
+            {matchingUsers.map((user, index) => (
+              <div
+                key={Math.random()}
+                className={`card card-${index}`}
+                throwout={e => this.swiped(e, index)}
+              >
+                <StackCard
+                  user={user}
+                  index={index}
+                  btnClicked={this.btnClicked}
+                />
+              </div>
+            ))}
+          </Swing>
+        ) : (
+          <h3>No matching user found!</h3>
+        )}
       </div>
     );
   }
