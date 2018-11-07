@@ -5,9 +5,9 @@ import PropTypes from 'prop-types';
 import { message as Message, Icon, Button, Menu, Dropdown } from 'antd';
 import isLoggedIn from '../../Helper';
 import firebase from '../../Config/firebase';
-import UserCard from '../../Component/UserCard';
 
 const Users = firebase.firestore().collection('Users');
+const Meetings = firebase.firestore().collection('Meetings');
 
 class Home extends Component {
   constructor(props) {
@@ -18,6 +18,7 @@ class Home extends Component {
       btnLoading: false,
       duration: [],
       matchingUsers: [],
+      meetings: [],
       screenLoading: true,
     };
   }
@@ -45,6 +46,8 @@ class Home extends Component {
           else if (status === 'step2') history.push('/profile/step3');
           else if (status === 'step3') history.push('/profile/step4');
         }
+
+        this.checkMeetings();
       })
       .catch(err => {
         Message.error('Something Went Wrong! See console for log.');
@@ -52,6 +55,16 @@ class Home extends Component {
         this.setState({ screenLoading: false });
       });
   }
+
+  checkMeetings = () => {
+    this.setState({ screenLoading: true });
+    Meetings.where('setBy', '==', localStorage.getItem('uid'))
+      .get()
+      .then(res => {
+        console.log(res.docs);
+        this.setState({ screenLoading: false });
+      });
+  };
 
   findMatch = () => {
     const { beverages } = this.state;
@@ -105,7 +118,10 @@ class Home extends Component {
     this.setState({ btnLoading: false, matchingUsers });
     if (matchingUsers.length > 0) {
       Message.info(`${matchingUsers.length} Match Found`);
-      // console.clear();
+      const { history } = this.props;
+      history.push('/matching-users', { matchingUsers });
+
+      console.clear();
     } else Message.info('No Match Found');
   };
 
@@ -145,9 +161,7 @@ class Home extends Component {
   };
 
   render() {
-    const { screenLoading, btnLoading, matchingUsers } = this.state;
-    console.log(matchingUsers, 'matchingUsers');
-    const { history } = this.props;
+    const { screenLoading, btnLoading, meetings } = this.state;
 
     const menu = (
       <Menu>
@@ -179,7 +193,7 @@ class Home extends Component {
             <Icon type="ellipsis" theme="outlined" />
           </span>
         </Dropdown>
-        {matchingUsers.length === 0 ? (
+        {meetings.length === 0 && (
           <div>
             <h1>You have not done any meeting yet!</h1>
             <p>
@@ -212,8 +226,6 @@ class Home extends Component {
               onClick={this.findMatch}
             />
           </div>
-        ) : (
-          <UserCard matchingUsers={matchingUsers} history={history} />
         )}
       </div>
     );

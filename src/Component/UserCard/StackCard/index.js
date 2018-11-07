@@ -39,7 +39,7 @@ const StackCard = props => {
     <Row>
       <Col type="flex" align="middle" justify="center">
         <Card
-          style={{ width: 300 }}
+          style={{ width: '100%' }}
           cover={carousel}
           actions={[
             <Icon
