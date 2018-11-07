@@ -32,8 +32,9 @@ class Home extends Component {
     Users.doc(uid)
       .get()
       .then(res => {
-        const { status, beverages, duration } = res.data();
+        const { status, beverages, duration, coords } = res.data();
         this.setState({ beverages, duration, screenLoading: false });
+        localStorage.setItem('coords', JSON.stringify(coords));
 
         if (status !== 'completed') {
           localStorage.setItem('status', status);
@@ -68,6 +69,7 @@ class Home extends Component {
             beveragesMatchingUsers = [...beveragesMatchingUsers, ...newData];
 
             if (index === beverages.length - 1) {
+              console.log('beforeFilterDuration', beveragesMatchingUsers);
               this.filterDuration(
                 this.removeDuplicates(beveragesMatchingUsers, 'uid'),
               );
@@ -103,7 +105,7 @@ class Home extends Component {
     this.setState({ btnLoading: false, matchingUsers });
     if (matchingUsers.length > 0) {
       Message.info(`${matchingUsers.length} Match Found`);
-      console.clear();
+      // console.clear();
     } else Message.info('No Match Found');
   };
 
@@ -144,6 +146,7 @@ class Home extends Component {
 
   render() {
     const { screenLoading, btnLoading, matchingUsers } = this.state;
+    console.log(matchingUsers, 'matchingUsers');
     const { history } = this.props;
 
     const menu = (

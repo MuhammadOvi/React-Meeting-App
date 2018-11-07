@@ -2,9 +2,10 @@
 import React, { Component } from 'react';
 import './style.css';
 import PropTypes from 'prop-types';
-import { Button, message as Message, Icon, Input, List } from 'antd';
+import { Button, message as Message, Icon, Input, List, Modal } from 'antd';
 import firebase from '../../Config/firebase';
 import { FSExplore, FSSearch } from '../../api/Foursquare';
+import Map from '../../Component/MapDirection';
 
 const { Search } = Input;
 const Users = firebase.firestore().collection('Users');
@@ -15,9 +16,12 @@ class MeetingPoint extends Component {
 
     this.state = {
       btnLoading: false,
-      coords: null,
+      coords: {},
       data: [],
+      destination: {},
       listLoading: false,
+      mapLoaded: false,
+      mapVisible: false,
       personToMeet: {},
       screenLoading: true,
       searched: false,
@@ -91,6 +95,22 @@ class MeetingPoint extends Component {
     history.push('/meeting/time');
   };
 
+  showDirection = place => {
+    const { lat, lng } = place;
+    const coords = JSON.parse(localStorage.getItem('coords'));
+    this.setState({ mapVisible: true });
+    const destination = { lat, lng };
+    this.setState({
+      coords,
+      destination,
+      mapLoaded: true,
+    });
+  };
+
+  closeMap = () => {
+    this.setState({ mapVisible: false });
+  };
+
   cancelMeeting = () => {
     const { history } = this.props;
     localStorage.removeItem('meeting');
@@ -119,8 +139,12 @@ class MeetingPoint extends Component {
   render() {
     const {
       btnLoading,
+      coords,
       data,
+      destination,
       listLoading,
+      mapLoaded,
+      mapVisible,
       screenLoading,
       searched,
       personToMeet,
@@ -159,45 +183,67 @@ class MeetingPoint extends Component {
                   title={item.name}
                   description={item.location.address}
                 />
-                <Button
-                  loading={btnLoading}
-                  type="primary"
-                  onClick={() => this.selectPlace(item)}
-                >
-                  Select
-                </Button>
+                <div style={{ textAlign: 'right' }}>
+                  <Button
+                    style={{ marginBottom: 5 }}
+                    loading={btnLoading}
+                    type="primary"
+                    onClick={() => this.selectPlace(item)}
+                  >
+                    Select
+                  </Button>
+                  <Button
+                    loading={btnLoading}
+                    type="primary"
+                    onClick={() => this.showDirection(item.location)}
+                  >
+                    Direction
+                  </Button>
+                </div>
               </List.Item>
             )}
           />
         ) : (
-          <List
-            loading={listLoading}
-            style={{ marginTop: 10 }}
-            itemLayout="horizontal"
-            dataSource={data}
-            renderItem={item => (
-              <List.Item
-                style={{
-                  background: 'rgba(0,0,0,.03)',
-                  margin: '10px 3px',
-                  padding: 5,
-                }}
-              >
-                <List.Item.Meta
-                  style={{ padding: 10 }}
-                  title={item.venue.name}
-                  description={item.venue.location.address}
-                />
-                <Button
-                  loading={btnLoading}
-                  type="primary"
-                  onClick={() => this.selectPlace(item.venue)}
+          <div>
+            <List
+              loading={listLoading}
+              style={{ marginTop: 10 }}
+              itemLayout="horizontal"
+              dataSource={data}
+              renderItem={item => (
+                <List.Item
+                  style={{
+                    background: 'rgba(0,0,0,.03)',
+                    margin: '10px 3px',
+                    padding: 5,
+                  }}
                 >
-                  Select
-                </Button>
-              </List.Item>
-            )}
-          />
+                  <List.Item.Meta
+                    style={{ padding: 10 }}
+                    title={item.venue.name}
+                    description={item.venue.location.address}
+                  />
+                  <div style={{ textAlign: 'right' }}>
+                    <Button
+                      style={{ marginBottom: 5 }}
+                      loading={btnLoading}
+                      type="primary"
+                      onClick={() => this.selectPlace(item.venue)}
+                    >
+                      Select
+                    </Button>
+                    <Button
+                      loading={btnLoading}
+                      type="primary"
+                      onClick={() => this.showDirection(item.venue.location)}
+                    >
+                      Direction
+                    </Button>
+                  </div>
+                </List.Item>
+              )}
+            />
+          </div>
         )}
 
         {
@@ -215,6 +261,24 @@ class MeetingPoint extends Component {
             Cancel
           </Button>
         }
+        <Modal
+          style={{ top: 10 }}
+          visible={mapVisible}
+          onCancel={this.closeMap}
+          footer={[
+            <Button key="back" onClick={this.closeMap}>
+              Close
+            </Button>,
+          ]}
+        >
+          {mapLoaded ? (
+            <div>
+              <Map origin={coords} destination={destination} />
+            </div>
+          ) : (
+            <Icon type="loading" />
+          )}
+        </Modal>
       </div>
     );
   }
