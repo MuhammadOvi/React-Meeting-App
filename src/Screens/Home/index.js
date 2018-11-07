@@ -17,7 +17,6 @@ class Home extends Component {
       beverages: [],
       btnLoading: false,
       duration: [],
-      matchingUsers: [],
       meetings: [],
       screenLoading: true,
     };
@@ -82,7 +81,6 @@ class Home extends Component {
             beveragesMatchingUsers = [...beveragesMatchingUsers, ...newData];
 
             if (index === beverages.length - 1) {
-              console.log('beforeFilterDuration', beveragesMatchingUsers);
               this.filterDuration(
                 this.removeDuplicates(beveragesMatchingUsers, 'uid'),
               );
@@ -94,7 +92,8 @@ class Home extends Component {
 
   filterDuration = beveragesMatchingUsers => {
     const { duration } = this.state;
-    let { matchingUsers } = this.state;
+
+    let matchingUsers = [];
 
     for (let i = 0; i < duration.length; i++) {
       const newData = beveragesMatchingUsers.filter(
@@ -115,13 +114,13 @@ class Home extends Component {
     //   matchingUsers = [...matchingUsers, ...newData];
     // });
 
-    this.setState({ btnLoading: false, matchingUsers });
+    matchingUsers = this.removeDuplicates(matchingUsers, 'uid');
+
+    this.setState({ btnLoading: false });
     if (matchingUsers.length > 0) {
       Message.info(`${matchingUsers.length} Match Found`);
       const { history } = this.props;
       history.push('/matching-users', { matchingUsers });
-
-      console.clear();
     } else Message.info('No Match Found');
   };
 

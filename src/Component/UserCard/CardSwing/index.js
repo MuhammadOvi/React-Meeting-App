@@ -1,16 +1,31 @@
 import React, { Component } from 'react';
 import './style.css';
-
 import PropTypes from 'prop-types';
 import Swing from 'react-swing';
 import { Direction } from 'swing';
-import { Modal } from 'antd';
+import { Modal, Button } from 'antd';
 import StackCard from '../StackCard';
 
 const { confirm } = Modal;
 
 class CardSwing extends Component {
+  constructor(props) {
+    super(props);
+
+    const {
+      history: {
+        location: { state },
+      },
+    } = this.props;
+
+    this.state = {
+      matchingUsers: state ? state.matchingUsers : [],
+    };
+  }
+
   componentDidMount() {
+    const { history } = this.props;
+    if (!localStorage.getItem('uid')) history.push('/');
     console.clear();
   }
 
@@ -32,14 +47,8 @@ class CardSwing extends Component {
   };
 
   showConfirm = index => {
-    const {
-      history,
-      history: {
-        location: {
-          state: { matchingUsers },
-        },
-      },
-    } = this.props;
+    const { history } = this.props;
+    const { matchingUsers } = this.state;
 
     confirm({
       cancelText: 'No',
@@ -56,18 +65,33 @@ class CardSwing extends Component {
     });
   };
 
+  goHome = () => {
+    const { history } = this.props;
+    history.push('/home');
+  };
+
   render() {
-    const {
-      history: {
-        location: {
-          state: { matchingUsers },
-        },
-      },
-    } = this.props;
+    const { matchingUsers } = this.state;
 
     return (
       <div className="section">
-        {matchingUsers ? (
+        {matchingUsers.length > 0 && (
+          <div
+            style={{
+              left: 0,
+              position: 'fixed',
+              textAlign: 'center',
+              top: 50,
+              width: '100%',
+            }}
+          >
+            <h3>No more matching users!</h3>
+            <Button type="primary" onClick={this.goHome}>
+              Home
+            </Button>
+          </div>
+        )}
+        {matchingUsers.length > 0 ? (
           <Swing
             config={{
               allowedDirections: [Direction.LEFT, Direction.RIGHT],
@@ -90,7 +114,12 @@ class CardSwing extends Component {
             ))}
           </Swing>
         ) : (
-          <h3>No matching user found!</h3>
+          <div style={{ marginTop: 10, textAlign: 'center' }}>
+            <h3>No matching user found!</h3>
+            <Button type="primary" onClick={this.goHome}>
+              Home
+            </Button>
+          </div>
         )}
       </div>
     );
