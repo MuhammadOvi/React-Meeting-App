@@ -47,7 +47,7 @@ class MeetingTime extends Component {
 
   setDateTime = value => {
     const date = moment(value).format('DD-MM-YYYY');
-    const time = moment(value).format('HH:mm:A');
+    const time = moment(value).format('hh:mm A');
 
     this.setState({ date, time });
   };
@@ -60,7 +60,7 @@ class MeetingTime extends Component {
 
     const data = {
       date,
-      status: 'pending',
+      status: 'unseen',
       time,
     };
 

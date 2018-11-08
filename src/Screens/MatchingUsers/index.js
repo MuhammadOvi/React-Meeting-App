@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import Swing from 'react-swing';
 import { Direction } from 'swing';
 import { Modal, Button } from 'antd';
-import StackCard from '../StackCard';
+import StackCard from '../../Component/StackCard';
 
 const { confirm } = Modal;
 
@@ -92,27 +92,42 @@ class CardSwing extends Component {
           </div>
         )}
         {matchingUsers.length > 0 ? (
-          <Swing
-            config={{
-              allowedDirections: [Direction.LEFT, Direction.RIGHT],
-            }}
-            className="stack"
-            tagName="div"
-          >
-            {matchingUsers.map((user, index) => (
-              <div
-                key={Math.random()}
-                className={`card card-${index}`}
-                throwout={e => this.swiped(e, index)}
-              >
-                <StackCard
-                  user={user}
-                  index={index}
-                  btnClicked={this.btnClicked}
-                />
-              </div>
-            ))}
-          </Swing>
+          <div>
+            <Swing
+              config={{
+                allowedDirections: [Direction.LEFT, Direction.RIGHT],
+              }}
+              className="stack"
+              tagName="div"
+            >
+              {matchingUsers.map((user, index) => (
+                <div
+                  key={Math.random()}
+                  className={`card card-${index}`}
+                  throwout={e => this.swiped(e, index)}
+                >
+                  <StackCard
+                    user={user}
+                    index={index}
+                    btnClicked={this.btnClicked}
+                  />
+                </div>
+              ))}
+            </Swing>
+            <div
+              style={{
+                bottom: 25,
+                left: 0,
+                position: 'absolute',
+                textAlign: 'center',
+                width: '100%',
+              }}
+            >
+              <Button type="primary" onClick={this.goHome} icon="home">
+                Home
+              </Button>
+            </div>
+          </div>
         ) : (
           <div style={{ marginTop: 10, textAlign: 'center' }}>
             <h3>No matching user found!</h3>

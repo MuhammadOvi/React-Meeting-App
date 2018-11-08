@@ -75,6 +75,7 @@ class MeetingPoint extends Component {
     this.setState({ btnLoading: true });
 
     const meeting = {
+      avatar: personToMeet.userImages[0],
       email: personToMeet.email,
       name: personToMeet.name,
       place: {

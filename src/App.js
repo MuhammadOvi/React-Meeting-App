@@ -11,7 +11,7 @@ import Step3 from './Screens/Step3';
 import Step4 from './Screens/Step4';
 import MeetingPoint from './Screens/MeetingPoint';
 import MeetingTime from './Screens/MeetingTime';
-import UserCard from './Component/UserCard';
+import MatchingUsers from './Screens/MatchingUsers';
 
 class App extends Component {
   componentDidMount() {
@@ -36,7 +36,7 @@ class App extends Component {
             <Route exact path="/meeting/location" component={MeetingPoint} />
             <Route exact path="/meeting/time" component={MeetingTime} />
 
-            <Route exact path="/matching-users" component={UserCard} />
+            <Route exact path="/matching-users" component={MatchingUsers} />
 
             <Route
               path="/"

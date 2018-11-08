@@ -2,12 +2,42 @@
 import React, { Component } from 'react';
 import './style.css';
 import PropTypes from 'prop-types';
-import { message as Message, Icon, Button, Menu, Dropdown } from 'antd';
+import {
+  message as Message,
+  Icon,
+  Button,
+  Menu,
+  Dropdown,
+  Row,
+  Col,
+} from 'antd';
 import isLoggedIn from '../../Helper';
 import firebase from '../../Config/firebase';
+import PendingDrawer from './PendingDrawer';
 
 const Users = firebase.firestore().collection('Users');
 const Meetings = firebase.firestore().collection('Meetings');
+
+const addMeetingBtn = {
+  background: '#C2185B',
+  borderColor: '#C2185B',
+  bottom: '30px',
+  fontSize: '2em',
+  height: '50px',
+  position: 'fixed',
+  right: '30px',
+  width: '50px',
+  zIndex: 2,
+};
+
+const meetingCatBtn = {
+  alignItems: 'center',
+  borderRadius: 5,
+  display: 'flex',
+  justifyContent: 'center',
+  marginBottom: 10,
+  minHeight: 100,
+};
 
 class Home extends Component {
   constructor(props) {
@@ -19,6 +49,7 @@ class Home extends Component {
       duration: [],
       meetings: [],
       screenLoading: true,
+      drawerPendingVisible: false,
     };
   }
 
@@ -59,9 +90,10 @@ class Home extends Component {
     this.setState({ screenLoading: true });
     Meetings.where('setBy', '==', localStorage.getItem('uid'))
       .get()
-      .then(res => {
-        console.log(res.docs);
-        this.setState({ screenLoading: false });
+      .then(({ docs }) => {
+        // setting all the meetings in one place
+        const meetings = docs.map(item => item.data());
+        this.setState({ meetings, screenLoading: false });
       });
   };
 
@@ -103,16 +135,6 @@ class Home extends Component {
       );
       matchingUsers = [...matchingUsers, ...newData];
     }
-
-    // // Same achievement with MAP
-    // duration.map(singleDuration => {
-    //   const newData = beveragesMatchingUsers.filter(
-    //     user =>
-    //       user.duration.includes(singleDuration) &&
-    //       user.uid !== localStorage.getItem('uid'),
-    //   );
-    //   matchingUsers = [...matchingUsers, ...newData];
-    // });
 
     matchingUsers = this.removeDuplicates(matchingUsers, 'uid');
 
@@ -159,8 +181,24 @@ class Home extends Component {
       });
   };
 
+  closeDrawer = drawerName => {
+    switch (drawerName) {
+      case 'PendingDrawer':
+        this.setState({ drawerPendingVisible: false });
+        break;
+
+      default:
+        break;
+    }
+  };
+
   render() {
-    const { screenLoading, btnLoading, meetings } = this.state;
+    const {
+      screenLoading,
+      btnLoading,
+      meetings,
+      drawerPendingVisible,
+    } = this.state;
 
     const menu = (
       <Menu>
@@ -192,7 +230,7 @@ class Home extends Component {
             <Icon type="ellipsis" theme="outlined" />
           </span>
         </Dropdown>
-        {meetings.length === 0 && (
+        {meetings.length === 0 ? (
           <div>
             <h1>You have not done any meeting yet!</h1>
             <p>
@@ -207,25 +245,71 @@ class Home extends Component {
                 type="plus"
               />
             </p>
-            <Button
-              loading={btnLoading}
-              style={{
-                background: '#C2185B',
-                borderColor: '#C2185B',
-                bottom: '30px',
-                fontSize: '2em',
-                height: '50px',
-                position: 'fixed',
-                right: '30px',
-                width: '50px',
-              }}
-              type="primary"
-              shape="circle"
-              icon="plus"
-              onClick={this.findMatch}
-            />
           </div>
+        ) : (
+          <Row
+            gutter={8}
+            style={{
+              height: '100%',
+              padding: 5,
+              width: '100%',
+            }}
+          >
+            <Col span={24} style={{ textAlign: 'center' }}>
+              <h2>Meetings!</h2>
+            </Col>
+            <Col span={12}>
+              <div style={meetingCatBtn}>
+                <Button
+                  onClick={() => {
+                    this.setState({
+                      drawerPendingVisible: !drawerPendingVisible,
+                    });
+                  }}
+                  style={{ width: '80%' }}
+                  type="primary"
+                  size="large"
+                >
+                  PENDING
+                </Button>
+                <PendingDrawer
+                  visible={drawerPendingVisible}
+                  close={this.closeDrawer}
+                  data={meetings}
+                />
+              </div>
+            </Col>
+            <Col span={12}>
+              <div style={meetingCatBtn}>
+                <Button style={{ width: '80%' }} type="primary" size="large">
+                  CANCELLED
+                </Button>
+              </div>
+            </Col>
+            <Col span={12}>
+              <div style={meetingCatBtn}>
+                <Button style={{ width: '80%' }} type="primary" size="large">
+                  ACCEPTED
+                </Button>
+              </div>
+            </Col>
+            <Col span={12}>
+              <div style={meetingCatBtn}>
+                <Button style={{ width: '80%' }} type="primary" size="large">
+                  DONE
+                </Button>
+              </div>
+            </Col>
+          </Row>
         )}
+        <Button
+          loading={btnLoading}
+          style={addMeetingBtn}
+          type="primary"
+          shape="circle"
+          icon="plus"
+          onClick={this.findMatch}
+        />
       </div>
     );
   }
