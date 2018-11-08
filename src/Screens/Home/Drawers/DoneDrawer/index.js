@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
-import { Drawer, Button, List, Avatar } from 'antd';
+import './style.css';
+import { Drawer, List, Avatar } from 'antd';
 
 export default class PendingDrawer extends Component {
   constructor(props) {
@@ -13,25 +14,34 @@ export default class PendingDrawer extends Component {
 
     return (
       <Drawer
-        title="Basic Drawer"
+        title="Meetings Done"
         placement="right"
         closable
-        onClose={() => close('PendingDrawer')}
+        onClose={() => close('DONE')}
         visible={visible}
         width="100%"
       >
         <List
+          bordered
           dataSource={data}
           renderItem={item => (
-            <List.Item key={item.id}>
+            <List.Item
+              key={item.id}
+              extra={<div style={{ textAlign: 'center' }}>{item.time}</div>}
+              style={{
+                position: 'relative',
+                width: '100%',
+              }}
+            >
               <List.Item.Meta
+                style={{
+                  position: 'absilute',
+                  width: '100%',
+                }}
                 avatar={<Avatar src={item.avatar} />}
-                title={<a href="https://ant.design">{item.name}</a>}
-                description={`At ${item.place.name} on ${item.date} at ${
-                  item.time
-                }`}
+                title={item.name}
+                description={`At ${item.place.name} - ${item.date}`}
               />
-              <Button type="primary">Accept</Button>
             </List.Item>
           )}
         />

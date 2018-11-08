@@ -10,10 +10,18 @@ import {
   Dropdown,
   Row,
   Col,
+  List,
+  Badge,
 } from 'antd';
 import isLoggedIn from '../../Helper';
 import firebase from '../../Config/firebase';
-import PendingDrawer from './PendingDrawer';
+import {
+  AcceptedDrawer,
+  CancelledDrawer,
+  DoneDrawer,
+  PendingDrawer,
+  Notifications,
+} from './Drawers';
 
 const Users = firebase.firestore().collection('Users');
 const Meetings = firebase.firestore().collection('Meetings');
@@ -30,15 +38,6 @@ const addMeetingBtn = {
   zIndex: 2,
 };
 
-const meetingCatBtn = {
-  alignItems: 'center',
-  borderRadius: 5,
-  display: 'flex',
-  justifyContent: 'center',
-  marginBottom: 10,
-  minHeight: 100,
-};
-
 class Home extends Component {
   constructor(props) {
     super(props);
@@ -46,10 +45,14 @@ class Home extends Component {
     this.state = {
       beverages: [],
       btnLoading: false,
+      drawerAcceptedVisible: false,
+      drawerCancelVisible: false,
+      drawerDoneVisible: false,
+      drawerNotificationsVisible: true,
+      drawerPendingVisible: false,
       duration: [],
       meetings: [],
       screenLoading: true,
-      drawerPendingVisible: false,
     };
   }
 
@@ -181,10 +184,32 @@ class Home extends Component {
       });
   };
 
-  closeDrawer = drawerName => {
+  switchDrawer = drawerName => {
+    const {
+      drawerPendingVisible,
+      drawerCancelVisible,
+      drawerAcceptedVisible,
+      drawerDoneVisible,
+      drawerNotificationsVisible,
+    } = this.state;
+
     switch (drawerName) {
-      case 'PendingDrawer':
-        this.setState({ drawerPendingVisible: false });
+      case 'PENDING':
+        this.setState({ drawerPendingVisible: !drawerPendingVisible });
+        break;
+      case 'CANCELLED':
+        this.setState({ drawerCancelVisible: !drawerCancelVisible });
+        break;
+      case 'ACCEPTED':
+        this.setState({ drawerAcceptedVisible: !drawerAcceptedVisible });
+        break;
+      case 'DONE':
+        this.setState({ drawerDoneVisible: !drawerDoneVisible });
+        break;
+      case 'NOTIFICATION':
+        this.setState({
+          drawerNotificationsVisible: !drawerNotificationsVisible,
+        });
         break;
 
       default:
@@ -198,6 +223,10 @@ class Home extends Component {
       btnLoading,
       meetings,
       drawerPendingVisible,
+      drawerCancelVisible,
+      drawerAcceptedVisible,
+      drawerDoneVisible,
+      drawerNotificationsVisible,
     } = this.state;
 
     const menu = (
@@ -217,6 +246,41 @@ class Home extends Component {
         </Menu.Item>
       </Menu>
     );
+
+    const pendingMeetings = meetings.filter(
+      elem => elem.status === 'unseen' || elem.status === 'pending',
+    );
+    const cancelledMeetings = meetings.filter(
+      elem => elem.status === 'cancelled',
+    );
+    const acceptedMeetings = meetings.filter(
+      elem => elem.status === 'accepted',
+    );
+    const doneMeetings = meetings.filter(elem => elem.status === 'done');
+    const notifications = meetings.filter(elem => elem.status === 'unseen');
+
+    const meetingSatus = [
+      {
+        desc: `${pendingMeetings.length} Meetings Request Pending`,
+        id: 1,
+        title: 'PENDING',
+      },
+      {
+        desc: `${cancelledMeetings.length} Meetings Cancelled`,
+        id: 2,
+        title: 'CANCELLED',
+      },
+      {
+        desc: `${acceptedMeetings.length} Meetings Accepted`,
+        id: 3,
+        title: 'ACCEPTED',
+      },
+      {
+        desc: `${doneMeetings.length} Meetings Done`,
+        id: 4,
+        title: 'DONE',
+      },
+    ];
 
     return (
       <div className="home">
@@ -258,47 +322,64 @@ class Home extends Component {
             <Col span={24} style={{ textAlign: 'center' }}>
               <h2>Meetings!</h2>
             </Col>
-            <Col span={12}>
-              <div style={meetingCatBtn}>
-                <Button
-                  onClick={() => {
-                    this.setState({
-                      drawerPendingVisible: !drawerPendingVisible,
-                    });
-                  }}
-                  style={{ width: '80%' }}
-                  type="primary"
-                  size="large"
-                >
-                  PENDING
-                </Button>
-                <PendingDrawer
-                  visible={drawerPendingVisible}
-                  close={this.closeDrawer}
-                  data={meetings}
-                />
-              </div>
+            {notifications.length > 0 && (
+              <Col span={24} style={{ margin: '10px 0', textAlign: 'center' }}>
+                <Badge count={notifications.length}>
+                  <Button
+                    style={{ fontSize: '2em', height: 50, width: 50 }}
+                    icon="bell"
+                    size="large"
+                    onClick={() => this.switchDrawer('NOTIFICATION')}
+                  />
+                </Badge>
+                <p>You have some new meeting requests!</p>
+              </Col>
+            )}
+            <Col span={24} style={{ textAlign: 'left' }}>
+              <List
+                dataSource={meetingSatus}
+                renderItem={item => (
+                  <List.Item key={item.id} style={{ padding: 10 }}>
+                    <List.Item.Meta
+                      title={item.title}
+                      description={item.desc}
+                    />
+                    <Button
+                      onClick={() => this.switchDrawer(item.title)}
+                      type="primary"
+                    >
+                      View
+                    </Button>
+                  </List.Item>
+                )}
+              />
             </Col>
-            <Col span={12}>
-              <div style={meetingCatBtn}>
-                <Button style={{ width: '80%' }} type="primary" size="large">
-                  CANCELLED
-                </Button>
-              </div>
-            </Col>
-            <Col span={12}>
-              <div style={meetingCatBtn}>
-                <Button style={{ width: '80%' }} type="primary" size="large">
-                  ACCEPTED
-                </Button>
-              </div>
-            </Col>
-            <Col span={12}>
-              <div style={meetingCatBtn}>
-                <Button style={{ width: '80%' }} type="primary" size="large">
-                  DONE
-                </Button>
-              </div>
+            <Col span={24}>
+              <PendingDrawer
+                visible={drawerPendingVisible}
+                close={this.switchDrawer}
+                data={pendingMeetings}
+              />
+              <CancelledDrawer
+                visible={drawerCancelVisible}
+                close={this.switchDrawer}
+                data={cancelledMeetings}
+              />
+              <AcceptedDrawer
+                visible={drawerAcceptedVisible}
+                close={this.switchDrawer}
+                data={acceptedMeetings}
+              />
+              <DoneDrawer
+                visible={drawerDoneVisible}
+                close={this.switchDrawer}
+                data={doneMeetings}
+              />
+              <Notifications
+                visible={drawerNotificationsVisible}
+                close={this.switchDrawer}
+                data={doneMeetings}
+              />
             </Col>
           </Row>
         )}
