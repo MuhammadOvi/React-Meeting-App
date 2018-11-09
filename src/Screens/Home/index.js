@@ -20,6 +20,7 @@ import {
   CancelledDrawer,
   DoneDrawer,
   PendingDrawer,
+  RequestedDrawer,
   Notifications,
 } from './Drawers';
 
@@ -48,10 +49,12 @@ class Home extends Component {
       drawerAcceptedVisible: false,
       drawerCancelVisible: false,
       drawerDoneVisible: false,
-      drawerNotificationsVisible: true,
+      drawerNotificationsVisible: false,
       drawerPendingVisible: false,
+      drawerRequestedVisible: false,
       duration: [],
       meetings: [],
+      myAvatar: '',
       screenLoading: true,
     };
   }
@@ -66,8 +69,13 @@ class Home extends Component {
     Users.doc(uid)
       .get()
       .then(res => {
-        const { status, beverages, duration, coords } = res.data();
-        this.setState({ beverages, duration, screenLoading: false });
+        const { status, beverages, duration, coords, userImages } = res.data();
+        this.setState({
+          beverages,
+          duration,
+          myAvatar: userImages[0],
+          screenLoading: false,
+        });
         localStorage.setItem('coords', JSON.stringify(coords));
 
         if (status !== 'completed') {
@@ -91,13 +99,13 @@ class Home extends Component {
 
   checkMeetings = () => {
     this.setState({ screenLoading: true });
-    Meetings.where('setBy', '==', localStorage.getItem('uid'))
-      .get()
-      .then(({ docs }) => {
+    Meetings.where('setBy', '==', localStorage.getItem('uid')).onSnapshot(
+      ({ docs }) => {
         // setting all the meetings in one place
         const meetings = docs.map(item => item.data());
         this.setState({ meetings, screenLoading: false });
-      });
+      },
+    );
   };
 
   findMatch = () => {
@@ -190,6 +198,7 @@ class Home extends Component {
       drawerCancelVisible,
       drawerAcceptedVisible,
       drawerDoneVisible,
+      drawerRequestedVisible,
       drawerNotificationsVisible,
     } = this.state;
 
@@ -206,6 +215,9 @@ class Home extends Component {
       case 'DONE':
         this.setState({ drawerDoneVisible: !drawerDoneVisible });
         break;
+      case 'REQUESTED':
+        this.setState({ drawerRequestedVisible: !drawerRequestedVisible });
+        break;
       case 'NOTIFICATION':
         this.setState({
           drawerNotificationsVisible: !drawerNotificationsVisible,
@@ -219,15 +231,19 @@ class Home extends Component {
 
   render() {
     const {
-      screenLoading,
       btnLoading,
-      meetings,
       drawerPendingVisible,
       drawerCancelVisible,
       drawerAcceptedVisible,
       drawerDoneVisible,
+      drawerRequestedVisible,
       drawerNotificationsVisible,
+      meetings,
+      myAvatar,
+      screenLoading,
     } = this.state;
+
+    const uid = localStorage.getItem('uid');
 
     const menu = (
       <Menu>
@@ -248,7 +264,9 @@ class Home extends Component {
     );
 
     const pendingMeetings = meetings.filter(
-      elem => elem.status === 'unseen' || elem.status === 'pending',
+      elem =>
+        elem.status === 'pending' ||
+        (elem.status === 'unseen' && elem.with === uid),
     );
     const cancelledMeetings = meetings.filter(
       elem => elem.status === 'cancelled',
@@ -257,7 +275,14 @@ class Home extends Component {
       elem => elem.status === 'accepted',
     );
     const doneMeetings = meetings.filter(elem => elem.status === 'done');
-    const notifications = meetings.filter(elem => elem.status === 'unseen');
+    const notifications = meetings.filter(
+      elem => elem.status === 'unseen' && elem.with === uid,
+    );
+    const requestedMeetings = meetings.filter(
+      elem =>
+        elem.setBy === uid &&
+        (elem.status === 'pending' || elem.status === 'unseen'),
+    );
 
     const meetingSatus = [
       {
@@ -279,6 +304,11 @@ class Home extends Component {
         desc: `${doneMeetings.length} Meetings Done`,
         id: 4,
         title: 'DONE',
+      },
+      {
+        desc: `${requestedMeetings.length} Requested Meetings`,
+        id: 5,
+        title: 'REQUESTED',
       },
     ];
 
@@ -375,10 +405,16 @@ class Home extends Component {
                 close={this.switchDrawer}
                 data={doneMeetings}
               />
+              <RequestedDrawer
+                visible={drawerRequestedVisible}
+                close={this.switchDrawer}
+                data={requestedMeetings}
+              />
               <Notifications
                 visible={drawerNotificationsVisible}
                 close={this.switchDrawer}
-                data={doneMeetings}
+                data={notifications}
+                myAvatar={myAvatar}
               />
             </Col>
           </Row>

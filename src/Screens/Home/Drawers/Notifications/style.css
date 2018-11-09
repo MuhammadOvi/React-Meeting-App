@@ -1,7 +1,16 @@
 .avatars img {
-  width: 50%;
+  width: 80px;
+  height: 84px;
   border-radius: 50%;
-  padding: 10px;
-  border: 5px solid #e91e63;
+  padding: 8px;
+  border: 4px solid #e91e63;
+}
+
+.avatars img:first-child {
+  border-color: #757575;
   border-right: none;
+}
+
+.avatars img:last-child {
+  border-left: none;
 }

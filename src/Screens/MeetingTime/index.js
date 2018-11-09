@@ -66,10 +66,13 @@ class MeetingTime extends Component {
 
     meeting = { ...meeting, ...data };
 
-    Meetings.add({ ...meeting, ...data }).then(() => {
-      localStorage.removeItem('meeting');
-      this.setState({ btnLoading: false, meeting, meetingSet: true });
-    });
+    const ref = Meetings.doc();
+    Meetings.doc(ref.id)
+      .set({ ...meeting, ...data, id: ref.id })
+      .then(() => {
+        localStorage.removeItem('meeting');
+        this.setState({ btnLoading: false, meeting, meetingSet: true });
+      });
   };
 
   cancelMeeting = () => {
