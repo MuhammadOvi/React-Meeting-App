@@ -116,16 +116,14 @@ class CardSwing extends Component {
             </Swing>
             <div
               style={{
-                bottom: 25,
-                left: 0,
+                bottom: 2,
+                left: 2,
                 position: 'absolute',
-                textAlign: 'center',
+                textAlign: 'left',
                 width: '100%',
               }}
             >
-              <Button type="primary" onClick={this.goHome} icon="home">
-                Home
-              </Button>
+              <Button onClick={this.goHome} icon="home" />
             </div>
           </div>
         ) : (

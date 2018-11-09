@@ -60,6 +60,8 @@ class Home extends Component {
   }
 
   componentDidMount() {
+    this.mounted = true;
+
     const { history } = this.props;
     isLoggedIn(history);
 
@@ -70,15 +72,17 @@ class Home extends Component {
       .get()
       .then(res => {
         const { status, beverages, duration, coords, userImages } = res.data();
-        this.setState({
-          beverages,
-          duration,
-          myAvatar: userImages[0],
-          screenLoading: false,
-        });
-        localStorage.setItem('coords', JSON.stringify(coords));
+        console.log('data****', res.data());
 
-        if (status !== 'completed') {
+        if (status === 'completed') {
+          this.setState({
+            beverages,
+            duration,
+            myAvatar: userImages[0],
+            screenLoading: false,
+          });
+          localStorage.setItem('coords', JSON.stringify(coords));
+        } else {
           localStorage.setItem('status', status);
           if (!status) localStorage.setItem('status', 'step0');
 
@@ -91,13 +95,19 @@ class Home extends Component {
         this.checkMeetings();
       })
       .catch(err => {
-        Message.error('Something Went Wrong! See console for log.');
+        Message.error('Something Went Wrong! Try Again Later.');
         console.log('ERROR => ', err);
+        this.logout();
         this.setState({ screenLoading: false });
       });
   }
 
+  componentWillUnmount() {
+    this.mounted = false;
+  }
+
   checkMeetings = () => {
+    if (!this.mounted) return;
     this.setState({ screenLoading: true });
     Meetings.where('setBy', '==', localStorage.getItem('uid')).onSnapshot(
       ({ docs }) => {
