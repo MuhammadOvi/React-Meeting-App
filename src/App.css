@@ -42,6 +42,7 @@
   padding: 10px;
   text-align: left;
   padding-bottom: 100px;
+  padding-top: 35px;
   position: fixed;
   top: 10px;
   background-color: #fff;
@@ -50,4 +51,8 @@
   width: calc(100% - 20px);
   border-radius: 5px;
   overflow: auto;
+}
+
+.link {
+  cursor: pointer !important;
 }

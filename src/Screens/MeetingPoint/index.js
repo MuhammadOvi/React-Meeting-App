@@ -96,6 +96,12 @@ class MeetingPoint extends Component {
     history.push('/meeting/time');
   };
 
+  goHome = () => {
+    const { history } = this.props;
+    localStorage.removeItem('personToMeet');
+    history.push('/home');
+  };
+
   showDirection = place => {
     const { lat, lng } = place;
     const coords = JSON.parse(localStorage.getItem('coords'));
@@ -158,6 +164,15 @@ class MeetingPoint extends Component {
             <Icon type="loading" />
           </div>
         )}
+        <Button
+          style={{
+            left: 2,
+            position: 'absolute',
+            top: 2,
+          }}
+          onClick={this.goHome}
+          icon="home"
+        />
         <h2>Where to meet?</h2>
         <p>Select a place to meet {personToMeet.name}</p>
         <Search

@@ -114,20 +114,19 @@ class CardSwing extends Component {
                 </div>
               ))}
             </Swing>
-            <div
+
+            <Button
               style={{
-                bottom: 2,
                 left: 2,
                 position: 'absolute',
-                textAlign: 'left',
-                width: '100%',
+                top: 2,
               }}
-            >
-              <Button onClick={this.goHome} icon="home" />
-            </div>
+              onClick={this.goHome}
+              icon="arrow-left"
+            />
           </div>
         ) : (
-          <div style={{ marginTop: 10, textAlign: 'center' }}>
+          <div style={{ marginTop: 15, textAlign: 'center' }}>
             <h3>No matching user found!</h3>
             <Button type="primary" onClick={this.goHome}>
               Home

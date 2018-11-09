@@ -75,6 +75,12 @@ class MeetingTime extends Component {
       });
   };
 
+  goHome = () => {
+    const { history } = this.props;
+    localStorage.removeItem('meeting');
+    history.push('/home');
+  };
+
   cancelMeeting = () => {
     const { history } = this.props;
     localStorage.removeItem('meeting');
@@ -100,6 +106,15 @@ class MeetingTime extends Component {
             <Icon type="loading" />
           </div>
         )}
+        <Button
+          style={{
+            left: 2,
+            position: 'absolute',
+            top: 2,
+          }}
+          onClick={this.goHome}
+          icon="home"
+        />
         {!meetingSet ? (
           <div>
             <h2>When to meet?</h2>

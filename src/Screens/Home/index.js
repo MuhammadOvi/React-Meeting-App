@@ -72,7 +72,6 @@ class Home extends Component {
       .get()
       .then(res => {
         const { status, beverages, duration, coords, userImages } = res.data();
-        console.log('data****', res.data());
 
         if (status === 'completed') {
           this.setState({
@@ -90,6 +89,10 @@ class Home extends Component {
           else if (status === 'step1') history.push('/profile/step2');
           else if (status === 'step2') history.push('/profile/step3');
           else if (status === 'step3') history.push('/profile/step4');
+          else {
+            Message.error('Something Went Wrong! Try Again Later.');
+            this.logout();
+          }
         }
 
         this.checkMeetings();

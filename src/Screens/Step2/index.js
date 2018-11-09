@@ -167,8 +167,10 @@ class Step2 extends Component {
     return (
       <div className="section">
         <h2>Step 02</h2>
-        <p>Let&apos;s upload some of your beautiful Images.</p>
-        <p>Your first image will be your Avatar</p>
+        <p>
+          Let&apos;s upload some of your beautiful Images. Your first image will
+          be your Avatar
+        </p>
         <div
           style={{
             margin: 'auto',
