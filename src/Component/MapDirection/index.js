@@ -24,21 +24,18 @@ const MapDirection = compose(
       this.setLocation();
     },
     setLocation(nextProps) {
-      const {
-        origin: { latitude, longitude },
-        destination: { lat, lng },
-      } = this.props;
+      const { origin, destination } = this.props;
 
-      let oLatitude = latitude;
-      let oLongitude = longitude;
-      let dLat = lat;
-      let dLng = lng;
+      let oLatitude = origin.latitude || origin.lat;
+      let oLongitude = origin.longitude || origin.lng;
+      let dLat = destination.lat || destination.latitude;
+      let dLng = destination.lng || destination.longitude;
 
       if (nextProps) {
-        oLatitude = nextProps.origin.latitude;
-        oLongitude = nextProps.origin.longitude;
-        dLat = nextProps.destination.lat;
-        dLng = nextProps.destination.lng;
+        oLatitude = nextProps.origin.latitude || nextProps.origin.lat;
+        oLongitude = nextProps.origin.longitude || nextProps.origin.lng;
+        dLat = nextProps.destination.lat || nextProps.destination.latitude;
+        dLng = nextProps.destination.lng || nextProps.destination.longitude;
       }
 
       const DirectionsService = new google.maps.DirectionsService();

@@ -3,12 +3,10 @@ import React, { Component } from 'react';
 import './style.css';
 import PropTypes from 'prop-types';
 import { Button, message as Message, Icon, Input, List, Modal } from 'antd';
-import firebase from '../../Config/firebase';
 import { FSExplore, FSSearch } from '../../api/Foursquare';
 import Map from '../../Component/MapDirection';
 
 const { Search } = Input;
-const Users = firebase.firestore().collection('Users');
 
 class MeetingPoint extends Component {
   constructor(props) {
@@ -40,16 +38,9 @@ class MeetingPoint extends Component {
     }
 
     this.setState({ personToMeet });
+    const { coords } = personToMeet.myData;
 
-    Users.doc(localStorage.getItem('uid'))
-      .get()
-      .then(res => {
-        const { coords } = res.data();
-        this.setState({ coords });
-        return fetch(
-          `${FSExplore}ll=${coords.latitude},${coords.longitude}&limit=3`,
-        );
-      })
+    fetch(`${FSExplore}ll=${coords.latitude},${coords.longitude}&limit=3`)
       .then(res => res.json())
       .then(res => {
         if (res.response.groups) {
@@ -107,7 +98,9 @@ class MeetingPoint extends Component {
 
   showDirection = place => {
     const { lat, lng } = place;
-    const coords = JSON.parse(localStorage.getItem('coords'));
+    const {
+      personToMeet: { coords },
+    } = this.state;
     this.setState({ mapVisible: true });
     const destination = { lat, lng };
     this.setState({

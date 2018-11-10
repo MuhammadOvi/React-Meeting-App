@@ -59,17 +59,17 @@
 .data {
   position: relative;
   width: 100%;
-  height: 100px;
+  min-height: 110px;
   padding: 10px;
-  padding-left: 100px;
+  padding-left: 110px;
 }
 
 .data .img {
   position: absolute;
   left: 10px;
   top: 10px;
-  height: 80px;
-  width: 80px;
+  height: 90px;
+  width: 90px;
   margin-right: 10px;
   box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2), 0 1px 1px rgba(0, 0, 0, 0.3);
 }
@@ -83,11 +83,14 @@
   font-weight: bold;
 }
 
-.data span.place {
+.data span.place,
+.data span.time,
+.data span.info {
   display: block;
 }
 
-.data span.time {
+.data span.info {
+  margin-top: 5px;
   display: block;
 }
 
@@ -97,14 +100,53 @@
   padding: 15px;
   border-top: 1px solid rgba(128, 128, 128, 0.5);
   text-align: center;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: stretch;
+  justify-content: space-evenly;
+}
+
+.actions .react-add-to-calendar {
+  position: relative;
+  display: inline-block;
+  border: 1px solid;
+  text-align: center;
+  touch-action: manipulation;
+  cursor: pointer;
+  border: 1px solid #d9d9d9;
+  padding: 4.5px 15px;
+  border-radius: 4px;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+  position: relative;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.015);
+  color: rgba(0, 0, 0, 0.65);
+  background-color: #fff;
+  margin: 5px 3px;
+}
+
+.actions .react-add-to-calendar__button {
+  display: block;
+}
+
+.actions .react-add-to-calendar__dropdown {
+  position: absolute;
+  top: 30px;
+  z-index: 1;
 }
 
 .actions .react-add-to-calendar__dropdown ul {
   list-style: none;
-  /* border: 1px solid gray; */
   display: inline-block;
-  margin-top: 5px;
   border-radius: 5px;
   padding: 5px 10px;
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2), 0 1px 1px rgba(0, 0, 0, 0.3);
+  background: white;
+  box-shadow: 0 0px 3px rgba(0, 0, 0, 0.3), 0 1px 1px rgba(0, 0, 0, 0.4);
+}
+
+.actions .btn {
+  margin: 5px 0;
 }
