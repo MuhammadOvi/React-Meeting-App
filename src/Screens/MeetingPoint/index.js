@@ -2,15 +2,7 @@
 import React, { Component } from 'react';
 import './style.css';
 import PropTypes from 'prop-types';
-import {
-  Button,
-  ButtonGroup,
-  message as Message,
-  Icon,
-  Input,
-  List,
-  Modal,
-} from 'antd';
+import { Button, message as Message, Icon, Input, List, Modal } from 'antd';
 import firebase from '../../Config/firebase';
 import { FSExplore, FSSearch } from '../../api/Foursquare';
 import Map from '../../Component/MapDirection';
@@ -214,7 +206,7 @@ class MeetingPoint extends Component {
                     textAlign: 'right',
                   }}
                 >
-                  <ButtonGroup>
+                  <Button.Group>
                     <Button
                       loading={btnLoading}
                       type="primary"
@@ -233,7 +225,7 @@ class MeetingPoint extends Component {
                         style={{ height: '80%' }}
                       />
                     </Button>
-                  </ButtonGroup>
+                  </Button.Group>
                 </div>
               </List.Item>
             )}
@@ -264,7 +256,7 @@ class MeetingPoint extends Component {
                       textAlign: 'right',
                     }}
                   >
-                    <ButtonGroup>
+                    <Button.Group>
                       <Button
                         loading={btnLoading}
                         type="primary"
@@ -283,7 +275,7 @@ class MeetingPoint extends Component {
                           style={{ height: '80%' }}
                         />
                       </Button>
-                    </ButtonGroup>
+                    </Button.Group>
                   </div>
                 </List.Item>
               )}
