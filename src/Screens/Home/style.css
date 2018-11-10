@@ -43,3 +43,68 @@
   padding: 0 5px;
   cursor: pointer !important;
 }
+
+.ant-list-item-content {
+  flex: 0 !important;
+}
+
+.data-card {
+  width: 100%;
+  min-height: 100px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.16), 0 1px 3px rgba(0, 0, 0, 0.23);
+  margin-bottom: 20px;
+  border-radius: 5px;
+}
+
+.data {
+  position: relative;
+  width: 100%;
+  height: 100px;
+  padding: 10px;
+  padding-left: 100px;
+}
+
+.data .img {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  height: 80px;
+  width: 80px;
+  margin-right: 10px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2), 0 1px 1px rgba(0, 0, 0, 0.3);
+}
+
+.data img {
+  border-radius: 5px;
+}
+
+.data span.name {
+  display: block;
+  font-weight: bold;
+}
+
+.data span.place {
+  display: block;
+}
+
+.data span.time {
+  display: block;
+}
+
+.actions {
+  width: 100%;
+  height: auto;
+  padding: 15px;
+  border-top: 1px solid rgba(128, 128, 128, 0.5);
+  text-align: center;
+}
+
+.actions .react-add-to-calendar__dropdown ul {
+  list-style: none;
+  /* border: 1px solid gray; */
+  display: inline-block;
+  margin-top: 5px;
+  border-radius: 5px;
+  padding: 5px 10px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2), 0 1px 1px rgba(0, 0, 0, 0.3);
+}

@@ -55,6 +55,7 @@ class Home extends Component {
       duration: [],
       meetings: [],
       myAvatar: '',
+      notifications: [],
       screenLoading: true,
     };
   }
@@ -116,9 +117,24 @@ class Home extends Component {
       ({ docs }) => {
         // setting all the meetings in one place
         const meetings = docs.map(item => item.data());
-        this.setState({ meetings, screenLoading: false });
+        this.setState(
+          { meetings, screenLoading: false },
+          this.checkNotifications(),
+        );
       },
     );
+  };
+
+  checkNotifications = () => {
+    if (!this.mounted) return;
+    this.setState({ screenLoading: true });
+    Meetings.where('status', '==', 'unseen')
+      .where('with', '==', localStorage.getItem('uid'))
+      .onSnapshot(({ docs }) => {
+        // setting all the meetings in one place
+        const notifications = docs.map(item => item.data());
+        this.setState({ notifications, screenLoading: false });
+      });
   };
 
   findMatch = () => {
@@ -254,6 +270,7 @@ class Home extends Component {
       drawerNotificationsVisible,
       meetings,
       myAvatar,
+      notifications,
       screenLoading,
     } = this.state;
 
@@ -289,9 +306,7 @@ class Home extends Component {
       elem => elem.status === 'accepted',
     );
     const doneMeetings = meetings.filter(elem => elem.status === 'done');
-    const notifications = meetings.filter(
-      elem => elem.status === 'unseen' && elem.with === uid,
-    );
+
     const requestedMeetings = meetings.filter(
       elem =>
         elem.setBy === uid &&
@@ -340,6 +355,19 @@ class Home extends Component {
         </Dropdown>
         {meetings.length === 0 ? (
           <div>
+            {notifications.length > 0 && (
+              <Col span={24} style={{ margin: '10px 0', textAlign: 'center' }}>
+                <Badge count={notifications.length}>
+                  <Button
+                    style={{ fontSize: '2em', height: 50, width: 50 }}
+                    icon="bell"
+                    size="large"
+                    onClick={() => this.switchDrawer('NOTIFICATION')}
+                  />
+                </Badge>
+                <p>You have some new meeting requests!</p>
+              </Col>
+            )}
             <h1>You have not done any meeting yet!</h1>
             <p>
               Start one by tapping{' '}
@@ -398,39 +426,6 @@ class Home extends Component {
                 )}
               />
             </Col>
-            <Col span={24}>
-              <PendingDrawer
-                visible={drawerPendingVisible}
-                close={this.switchDrawer}
-                data={pendingMeetings}
-              />
-              <CancelledDrawer
-                visible={drawerCancelVisible}
-                close={this.switchDrawer}
-                data={cancelledMeetings}
-              />
-              <AcceptedDrawer
-                visible={drawerAcceptedVisible}
-                close={this.switchDrawer}
-                data={acceptedMeetings}
-              />
-              <DoneDrawer
-                visible={drawerDoneVisible}
-                close={this.switchDrawer}
-                data={doneMeetings}
-              />
-              <RequestedDrawer
-                visible={drawerRequestedVisible}
-                close={this.switchDrawer}
-                data={requestedMeetings}
-              />
-              <Notifications
-                visible={drawerNotificationsVisible}
-                close={this.switchDrawer}
-                data={notifications}
-                myAvatar={myAvatar}
-              />
-            </Col>
           </Row>
         )}
         <Button
@@ -440,6 +435,37 @@ class Home extends Component {
           shape="circle"
           icon="plus"
           onClick={this.findMatch}
+        />
+        <PendingDrawer
+          visible={drawerPendingVisible}
+          close={this.switchDrawer}
+          data={pendingMeetings}
+        />
+        <CancelledDrawer
+          visible={drawerCancelVisible}
+          close={this.switchDrawer}
+          data={cancelledMeetings}
+        />
+        <AcceptedDrawer
+          visible={drawerAcceptedVisible}
+          close={this.switchDrawer}
+          data={acceptedMeetings}
+        />
+        <DoneDrawer
+          visible={drawerDoneVisible}
+          close={this.switchDrawer}
+          data={doneMeetings}
+        />
+        <RequestedDrawer
+          visible={drawerRequestedVisible}
+          close={this.switchDrawer}
+          data={requestedMeetings}
+        />
+        <Notifications
+          visible={drawerNotificationsVisible}
+          close={this.switchDrawer}
+          data={notifications}
+          myAvatar={myAvatar}
         />
       </div>
     );

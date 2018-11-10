@@ -13,16 +13,21 @@
   z-index: 100;
 }
 
-.react-add-to-calendar__dropdown ul {
+.new-meeting {
+  margin-top: 100;
+  text-align: center;
+}
+
+.new-meeting .react-add-to-calendar__dropdown ul {
   margin-top: 10px;
   list-style: none;
 }
 
-.react-add-to-calendar__button a {
+.new-meeting .react-add-to-calendar__button a {
   color: #40a9ff !important;
 }
 
-.react-add-to-calendar__button span {
+.new-meeting .react-add-to-calendar__button {
   border: 1px solid #40a9ff;
   padding: 10px;
   border-radius: 5px;

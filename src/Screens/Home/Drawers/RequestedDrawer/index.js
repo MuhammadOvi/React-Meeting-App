@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
-import './style.css';
-import { Drawer, List, Avatar } from 'antd';
+import ModalImage from 'react-modal-image';
+import { Drawer, Icon } from 'antd';
+import moment from 'moment-timezone';
+import AddToCalendar from 'react-add-to-calendar';
 
 export default class RequestedDrawer extends Component {
   constructor(props) {
@@ -21,30 +23,55 @@ export default class RequestedDrawer extends Component {
         visible={visible}
         width="100%"
       >
-        <List
-          bordered
-          dataSource={data}
-          renderItem={item => (
-            <List.Item
-              key={item.id}
-              extra={<div style={{ textAlign: 'center' }}>{item.time}</div>}
-              style={{
-                position: 'relative',
-                width: '100%',
-              }}
-            >
-              <List.Item.Meta
-                style={{
-                  position: 'absilute',
-                  width: '100%',
-                }}
-                avatar={<Avatar src={item.avatar} />}
-                title={item.name}
-                description={`At ${item.place.name} - ${item.date}`}
-              />
-            </List.Item>
-          )}
-        />
+        {data.length > 0 ? (
+          data.map(item => (
+            <div className="data-card" key={item.id}>
+              <div className="data">
+                <ModalImage
+                  className="img"
+                  small={item.avatar}
+                  medium={item.avatar}
+                  alt={item.name}
+                />
+                <span className="name">{item.name}</span>
+                <span className="place">
+                  <Icon type="home" /> {item.place.name}
+                </span>
+                <span className="time">
+                  <Icon type="clock-circle" /> {item.date} <b>({item.time})</b>
+                </span>
+              </div>
+              <div className="actions">
+                <AddToCalendar
+                  className="add-to-calender-btn"
+                  displayItemIcons={false}
+                  event={{
+                    description: `Have a meeting with ${
+                      item.name
+                    } created with MEETLO APP! at ${item.place.name}`,
+                    location: `${item.place.name} ${item.place.address}`,
+                    startTime: `${moment(
+                      `${item.date} ${item.time}`,
+                      'DD-MM-YYYY hh:mm A',
+                    ).format()}`,
+                    title: `Meeting with ${item.name}`,
+                  }}
+                />
+              </div>
+            </div>
+          ))
+        ) : (
+          <div
+            className="data-card"
+            style={{
+              alignItems: 'center',
+              display: 'flex',
+              justifyContent: 'center',
+            }}
+          >
+            <h3>No Data</h3>
+          </div>
+        )}
       </Drawer>
     );
   }

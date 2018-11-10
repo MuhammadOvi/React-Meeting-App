@@ -170,7 +170,7 @@ class MeetingTime extends Component {
             </Button>
           </div>
         ) : (
-          <div style={{ marginTop: 100, textAlign: 'center' }}>
+          <div className="new-meeting">
             <h2 style={{ fontWeight: 'lighter' }}>
               Meeting Set with {meeting.name}!<br />
               On {meeting.date} at {meeting.time}

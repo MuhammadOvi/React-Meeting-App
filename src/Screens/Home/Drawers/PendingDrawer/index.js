@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
-import './style.css';
-import { Drawer, Button, List, Avatar } from 'antd';
+import ModalImage from 'react-modal-image';
+import { Drawer, Icon } from 'antd';
 
 export default class PendingDrawer extends Component {
   constructor(props) {
@@ -21,46 +21,38 @@ export default class PendingDrawer extends Component {
         visible={visible}
         width="100%"
       >
-        <List
-          bordered
-          dataSource={data}
-          renderItem={item => (
-            <List.Item
-              key={item.id}
-              extra={<div style={{ textAlign: 'center' }}>{item.time}</div>}
-              style={{
-                position: 'relative',
-                width: '100%',
-              }}
-            >
-              <List.Item.Meta
-                style={{
-                  position: 'absilute',
-                  width: '100%',
-                }}
-                avatar={<Avatar src={item.avatar} />}
-                title={item.name}
-                description={`At ${item.place.name} - ${item.date}`}
-              />
-              <div
-                style={{
-                  position: 'absolute',
-                  right: 10,
-                  top: 12,
-                  width: '35px',
-                }}
-              >
-                <Button
-                  style={{ marginBottom: 5 }}
-                  shape="circle"
-                  icon="check"
-                  type="primary"
+        {data.length > 0 ? (
+          data.map(item => (
+            <div className="data-card" key={item.id}>
+              <div className="data">
+                <ModalImage
+                  className="img"
+                  small={item.avatar}
+                  medium={item.avatar}
+                  alt={item.name}
                 />
-                <Button shape="circle" icon="close" type="danger" />
+                <span className="name">{item.name}</span>
+                <span className="place">
+                  <Icon type="home" /> {item.place.name}
+                </span>
+                <span className="time">
+                  <Icon type="clock-circle" /> {item.date} <b>({item.time})</b>
+                </span>
               </div>
-            </List.Item>
-          )}
-        />
+            </div>
+          ))
+        ) : (
+          <div
+            className="data-card"
+            style={{
+              alignItems: 'center',
+              display: 'flex',
+              justifyContent: 'center',
+            }}
+          >
+            <h3>No Data</h3>
+          </div>
+        )}
       </Drawer>
     );
   }
