@@ -129,6 +129,7 @@ class Home extends Component {
     let beveragesMatchingUsers = [];
     beverages.map((beverage, index) =>
       Users.where('beverages', 'array-contains', beverage)
+        .where('status', '==', 'completed')
         .get()
         .then(response => {
           if (!response.empty) {
@@ -271,7 +272,7 @@ class Home extends Component {
           Reset Profile (Dev.)
         </Menu.Item>
         <Menu.Item key="3" disabled>
-          App v0.01
+          App v0.09
         </Menu.Item>
       </Menu>
     );

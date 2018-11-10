@@ -186,6 +186,7 @@ class Step2 extends Component {
             fileList={fileListForPreview}
             onPreview={this.handlePreview}
             onChange={this.handleChange}
+            onRemove={!loading}
           >
             {fileList.length >= 3 ? null : uploadButton}
           </Upload>

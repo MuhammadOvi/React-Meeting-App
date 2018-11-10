@@ -2,8 +2,9 @@
 import React, { Component } from 'react';
 import './style.css';
 import PropTypes from 'prop-types';
-import { Button, Icon, DatePicker } from 'antd';
+import { Button, Icon, DatePicker, Popconfirm } from 'antd';
 import moment from 'moment-timezone';
+import AddToCalendar from 'react-add-to-calendar';
 import firebase from '../../Config/firebase';
 
 const Meetings = firebase.firestore().collection('Meetings');
@@ -132,20 +133,27 @@ class MeetingTime extends Component {
             />
 
             {date &&
-              time && (
-                <Button
-                  loading={btnLoading}
-                  type="primary"
-                  style={{
-                    bottom: 20,
-                    left: 20,
-                    position: 'absolute',
-                  }}
-                  onClick={this.sendRequest}
-                  icon="check"
+              time &&
+              meeting.name && (
+                <Popconfirm
+                  title={`Sure want to send request to ${meeting.name}?`}
+                  onConfirm={this.sendRequest}
+                  okText="Yes"
+                  cancelText="No"
                 >
-                  Send Request
-                </Button>
+                  <Button
+                    loading={btnLoading}
+                    type="primary"
+                    style={{
+                      bottom: 20,
+                      left: 20,
+                      position: 'absolute',
+                    }}
+                    icon="check"
+                  >
+                    Send Request
+                  </Button>
+                </Popconfirm>
               )}
 
             <Button
@@ -177,6 +185,22 @@ class MeetingTime extends Component {
             >
               HOME
             </Button>
+            <br />
+            <br />
+            <AddToCalendar
+              displayItemIcons={false}
+              event={{
+                description: `Have a meeting with ${
+                  meeting.name
+                } created with MEETLO APP! at ${meeting.place.name}`,
+                location: `${meeting.place.name} ${meeting.place.address}`,
+                startTime: `${moment(
+                  `${meeting.date} ${meeting.time}`,
+                  'DD-MM-YYYY hh:mm A',
+                ).format()}`,
+                title: `Meeting with ${meeting.name}`,
+              }}
+            />
           </div>
         )}
       </div>
