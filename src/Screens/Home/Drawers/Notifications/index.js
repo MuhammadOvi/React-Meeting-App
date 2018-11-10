@@ -109,8 +109,8 @@ export default class Notifications extends Component {
                   ]}
                 >
                   <div className="avatars">
-                    <img src={elem.avatar} alt="avatar 1" />
-                    <img src={myAvatar} alt="avatar 2" />
+                    <img src={myAvatar} alt="avatar 1" />
+                    <img src={elem.avatar} alt="avatar 2" />
                   </div>
                   <Card.Meta
                     title={elem.name}

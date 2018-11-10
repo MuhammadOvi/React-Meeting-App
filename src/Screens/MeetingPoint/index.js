@@ -75,9 +75,6 @@ class MeetingPoint extends Component {
     this.setState({ btnLoading: true });
 
     const meeting = {
-      avatar: personToMeet.userImages[0],
-      email: personToMeet.email,
-      name: personToMeet.name,
       place: {
         address: place.location.address,
         coords: {
@@ -87,7 +84,12 @@ class MeetingPoint extends Component {
         name: place.name,
       },
       setBy: localStorage.getItem('uid'),
+      setByAvatar: personToMeet.myData.avatar,
+      setByName: personToMeet.myData.name,
       with: personToMeet.uid,
+      withAvatar: personToMeet.userImages[0],
+      withEmail: personToMeet.email,
+      withName: personToMeet.name,
     };
 
     localStorage.setItem('meeting', JSON.stringify(meeting));

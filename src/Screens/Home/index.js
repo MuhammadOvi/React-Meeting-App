@@ -51,10 +51,11 @@ class Home extends Component {
       drawerDoneVisible: false,
       drawerNotificationsVisible: false,
       drawerPendingVisible: false,
-      drawerRequestedVisible: false,
+      drawerRequestedVisible: true,
       duration: [],
-      meetings: [],
-      myAvatar: '',
+      meetingsSetByMe: [],
+      meetingsSetForMe: [],
+      myData: {},
       notifications: [],
       screenLoading: true,
     };
@@ -72,13 +73,20 @@ class Home extends Component {
     Users.doc(uid)
       .get()
       .then(res => {
-        const { status, beverages, duration, coords, userImages } = res.data();
+        const {
+          name,
+          status,
+          beverages,
+          duration,
+          coords,
+          userImages,
+        } = res.data();
 
         if (status === 'completed') {
           this.setState({
             beverages,
             duration,
-            myAvatar: userImages[0],
+            myData: { avatar: userImages[0], name },
             screenLoading: false,
           });
           localStorage.setItem('coords', JSON.stringify(coords));
@@ -96,7 +104,8 @@ class Home extends Component {
           }
         }
 
-        this.checkMeetings();
+        this.checkMeetingsSetByMe();
+        this.checkMeetingsSetForMe();
       })
       .catch(err => {
         Message.error('Something Went Wrong! Try Again Later.');
@@ -110,15 +119,30 @@ class Home extends Component {
     this.mounted = false;
   }
 
-  checkMeetings = () => {
+  checkMeetingsSetByMe = () => {
     if (!this.mounted) return;
     this.setState({ screenLoading: true });
     Meetings.where('setBy', '==', localStorage.getItem('uid')).onSnapshot(
       ({ docs }) => {
-        // setting all the meetings in one place
-        const meetings = docs.map(item => item.data());
+        // setting all the meetingsSetByMe in one place
+        const meetingsSetByMe = docs.map(item => item.data());
         this.setState(
-          { meetings, screenLoading: false },
+          { meetingsSetByMe, screenLoading: false },
+          this.checkNotifications(),
+        );
+      },
+    );
+  };
+
+  checkMeetingsSetForMe = () => {
+    if (!this.mounted) return;
+    this.setState({ screenLoading: true });
+    Meetings.where('with', '==', localStorage.getItem('uid')).onSnapshot(
+      ({ docs }) => {
+        // setting all the meetingsSetForMe in one place
+        const meetingsSetForMe = docs.map(item => item.data());
+        this.setState(
+          { meetingsSetForMe, screenLoading: false },
           this.checkNotifications(),
         );
       },
@@ -131,7 +155,6 @@ class Home extends Component {
     Meetings.where('status', '==', 'unseen')
       .where('with', '==', localStorage.getItem('uid'))
       .onSnapshot(({ docs }) => {
-        // setting all the meetings in one place
         const notifications = docs.map(item => item.data());
         this.setState({ notifications, screenLoading: false });
       });
@@ -164,7 +187,7 @@ class Home extends Component {
   };
 
   filterDuration = beveragesMatchingUsers => {
-    const { duration } = this.state;
+    const { duration, myData } = this.state;
 
     let matchingUsers = [];
 
@@ -183,7 +206,7 @@ class Home extends Component {
     if (matchingUsers.length > 0) {
       Message.info(`${matchingUsers.length} Match Found`);
       const { history } = this.props;
-      history.push('/matching-users', { matchingUsers });
+      history.push('/matching-users', { matchingUsers, myData });
     } else Message.info('No Match Found');
   };
 
@@ -268,8 +291,9 @@ class Home extends Component {
       drawerDoneVisible,
       drawerRequestedVisible,
       drawerNotificationsVisible,
-      meetings,
-      myAvatar,
+      meetingsSetByMe,
+      meetingsSetForMe,
+      myData: { avatar },
       notifications,
       screenLoading,
     } = this.state;
@@ -289,29 +313,59 @@ class Home extends Component {
           Reset Profile (Dev.)
         </Menu.Item>
         <Menu.Item key="3" disabled>
-          App v0.09
+          App v0.10
         </Menu.Item>
       </Menu>
     );
 
-    const pendingMeetings = meetings.filter(
+    // All meetings set by me
+    const pendingMeetingsByMe = meetingsSetByMe.filter(
       elem =>
         elem.status === 'pending' ||
         (elem.status === 'unseen' && elem.with === uid),
     );
-    const cancelledMeetings = meetings.filter(
+    const cancelledMeetingsByMe = meetingsSetByMe.filter(
       elem => elem.status === 'cancelled',
     );
-    const acceptedMeetings = meetings.filter(
+    const acceptedMeetingsByMe = meetingsSetByMe.filter(
       elem => elem.status === 'accepted',
     );
-    const doneMeetings = meetings.filter(elem => elem.status === 'done');
+    const doneMeetingsByMe = meetingsSetByMe.filter(
+      elem => elem.status === 'done',
+    );
 
-    const requestedMeetings = meetings.filter(
+    const requestedMeetings = meetingsSetByMe.filter(
       elem =>
         elem.setBy === uid &&
         (elem.status === 'pending' || elem.status === 'unseen'),
     );
+
+    // All meetings set by other users
+    const pendingMeetingsForMe = meetingsSetForMe.filter(
+      elem =>
+        elem.status === 'pending' ||
+        (elem.status === 'unseen' && elem.with === uid),
+    );
+    const cancelledMeetingsForMe = meetingsSetForMe.filter(
+      elem => elem.status === 'cancelled',
+    );
+    const acceptedMeetingsForMe = meetingsSetForMe.filter(
+      elem => elem.status === 'accepted',
+    );
+    const doneMeetingsForMe = meetingsSetForMe.filter(
+      elem => elem.status === 'done',
+    );
+
+    const pendingMeetings = [...pendingMeetingsByMe, ...pendingMeetingsForMe];
+    const cancelledMeetings = [
+      ...cancelledMeetingsByMe,
+      ...cancelledMeetingsForMe,
+    ];
+    const acceptedMeetings = [
+      ...acceptedMeetingsByMe,
+      ...acceptedMeetingsForMe,
+    ];
+    const doneMeetings = [...doneMeetingsByMe, ...doneMeetingsForMe];
 
     const meetingSatus = [
       {
@@ -353,7 +407,7 @@ class Home extends Component {
             <Icon type="ellipsis" theme="outlined" />
           </span>
         </Dropdown>
-        {meetings.length === 0 ? (
+        {meetingsSetByMe.length === 0 && meetingsSetForMe.length === 0 ? (
           <div>
             {notifications.length > 0 && (
               <Col span={24} style={{ margin: '10px 0', textAlign: 'center' }}>
@@ -440,32 +494,37 @@ class Home extends Component {
           visible={drawerPendingVisible}
           close={this.switchDrawer}
           data={pendingMeetings}
+          myAvatar={avatar}
         />
         <CancelledDrawer
           visible={drawerCancelVisible}
           close={this.switchDrawer}
           data={cancelledMeetings}
+          myAvatar={avatar}
         />
         <AcceptedDrawer
           visible={drawerAcceptedVisible}
           close={this.switchDrawer}
           data={acceptedMeetings}
+          myAvatar={avatar}
         />
         <DoneDrawer
           visible={drawerDoneVisible}
           close={this.switchDrawer}
           data={doneMeetings}
+          myAvatar={avatar}
         />
         <RequestedDrawer
           visible={drawerRequestedVisible}
           close={this.switchDrawer}
           data={requestedMeetings}
+          myAvatar={avatar}
         />
         <Notifications
           visible={drawerNotificationsVisible}
           close={this.switchDrawer}
           data={notifications}
-          myAvatar={myAvatar}
+          myAvatar={avatar}
         />
       </div>
     );

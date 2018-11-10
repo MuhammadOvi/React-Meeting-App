@@ -119,7 +119,7 @@ class MeetingTime extends Component {
         {!meetingSet ? (
           <div>
             <h2>When to meet?</h2>
-            <p>Select a time to meet {meeting.name}</p>
+            <p>Select a time to meet {meeting.withName}</p>
 
             <DatePicker
               size="large"
@@ -134,9 +134,9 @@ class MeetingTime extends Component {
 
             {date &&
               time &&
-              meeting.name && (
+              meeting.withName && (
                 <Popconfirm
-                  title={`Sure want to send request to ${meeting.name}?`}
+                  title={`Sure want to send request to ${meeting.withName}?`}
                   onConfirm={this.sendRequest}
                   okText="Yes"
                   cancelText="No"
@@ -172,7 +172,7 @@ class MeetingTime extends Component {
         ) : (
           <div className="new-meeting">
             <h2 style={{ fontWeight: 'lighter' }}>
-              Meeting Set with {meeting.name}!<br />
+              Meeting Set with {meeting.withName}!<br />
               On {meeting.date} at {meeting.time}
             </h2>
             <br />
@@ -191,14 +191,14 @@ class MeetingTime extends Component {
               displayItemIcons={false}
               event={{
                 description: `Have a meeting with ${
-                  meeting.name
+                  meeting.withName
                 } created with MEETLO APP! at ${meeting.place.name}`,
                 location: `${meeting.place.name} ${meeting.place.address}`,
                 startTime: `${moment(
                   `${meeting.date} ${meeting.time}`,
                   'DD-MM-YYYY hh:mm A',
                 ).format()}`,
-                title: `Meeting with ${meeting.name}`,
+                title: `Meeting with ${meeting.withName}`,
               }}
             />
           </div>

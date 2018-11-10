@@ -10,7 +10,8 @@ export default class PendingDrawer extends Component {
   }
 
   render() {
-    const { visible, close, data } = this.props;
+    const { visible, close, data, myAvatar } = this.props;
+    const me = localStorage.getItem('uid');
 
     return (
       <Drawer
@@ -27,16 +28,22 @@ export default class PendingDrawer extends Component {
               <div className="data">
                 <ModalImage
                   className="img"
-                  small={item.avatar}
-                  medium={item.avatar}
-                  alt={item.name}
+                  small={item.setBy === me ? myAvatar : item.setByAvatar}
+                  medium={item.setBy === me ? myAvatar : item.setByAvatar}
+                  alt={item.setBy === me ? myAvatar : item.setByAvatar}
                 />
-                <span className="name">{item.name}</span>
+                <span className="name">
+                  {item.setBy === me ? item.withName : item.setByName}
+                </span>
                 <span className="place">
                   <Icon type="home" /> {item.place.name}
                 </span>
                 <span className="time">
                   <Icon type="clock-circle" /> {item.date} <b>({item.time})</b>
+                </span>
+                <span className="setBy">
+                  <Icon type="user" /> Set by{' '}
+                  {item.setBy === me ? 'me' : item.setByName}
                 </span>
               </div>
             </div>

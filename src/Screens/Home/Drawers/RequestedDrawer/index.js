@@ -29,11 +29,11 @@ export default class RequestedDrawer extends Component {
               <div className="data">
                 <ModalImage
                   className="img"
-                  small={item.avatar}
-                  medium={item.avatar}
-                  alt={item.name}
+                  small={item.withAvatar}
+                  medium={item.withAvatar}
+                  alt={item.withName}
                 />
-                <span className="name">{item.name}</span>
+                <span className="name">{item.withName}</span>
                 <span className="place">
                   <Icon type="home" /> {item.place.name}
                 </span>
@@ -47,14 +47,14 @@ export default class RequestedDrawer extends Component {
                   displayItemIcons={false}
                   event={{
                     description: `Have a meeting with ${
-                      item.name
+                      item.withName
                     } created with MEETLO APP! at ${item.place.name}`,
                     location: `${item.place.name} ${item.place.address}`,
                     startTime: `${moment(
                       `${item.date} ${item.time}`,
                       'DD-MM-YYYY hh:mm A',
                     ).format()}`,
-                    title: `Meeting with ${item.name}`,
+                    title: `Meeting with ${item.withName}`,
                   }}
                 />
               </div>

@@ -47,18 +47,26 @@ class CardSwing extends Component {
   };
 
   showConfirm = index => {
-    const { history } = this.props;
     const { matchingUsers } = this.state;
+
+    const {
+      history,
+      history: {
+        location: { state },
+      },
+    } = this.props;
 
     confirm({
       cancelText: 'No',
       okText: 'Yes',
       onCancel() {},
       onOk() {
-        localStorage.setItem(
-          'personToMeet',
-          JSON.stringify(matchingUsers[index]),
-        );
+        const personToMeet = {
+          ...matchingUsers[index],
+          myData: state.myData,
+        };
+
+        localStorage.setItem('personToMeet', JSON.stringify(personToMeet));
         history.push('/meeting/location');
       },
       title: `Want to meet ${matchingUsers[index].name}`,
