@@ -94,6 +94,14 @@
   display: block;
 }
 
+.data span.cancelled {
+  display: block;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 15px;
+  margin-left: -100px;
+}
+
 .actions {
   width: 100%;
   height: auto;
@@ -124,7 +132,6 @@
   position: relative;
   box-shadow: 0 2px 0 rgba(0, 0, 0, 0.015);
   color: rgba(0, 0, 0, 0.65);
-  background-color: #fff;
   margin: 5px 3px;
 }
 
@@ -149,4 +156,29 @@
 
 .actions .btn {
   margin: 5px 0;
+}
+
+.notification {
+  background: white;
+  border-top: 1px solid rgba(128, 128, 128, 0.5);
+  padding: 5px 10px;
+  position: relative;
+  padding-right: 30px;
+  /* display: none; */
+}
+
+.notification p {
+  margin: 0;
+  padding: 0;
+}
+
+.notification .notification-close-btn {
+  position: absolute;
+  right: 3px;
+  top: 3px;
+}
+
+.notification.success {
+  background: #ff4081;
+  color: white;
 }

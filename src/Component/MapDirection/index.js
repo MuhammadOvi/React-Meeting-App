@@ -8,6 +8,7 @@ import {
   GoogleMap,
   DirectionsRenderer,
 } from 'react-google-maps';
+import { Icon } from 'antd';
 import MapAPI from '../../api/GoogleMap';
 
 const MapDirection = compose(
@@ -61,10 +62,17 @@ const MapDirection = compose(
       return true;
     },
   }),
-)(props => (
-  <GoogleMap defaultZoom={8}>
-    {props.directions && <DirectionsRenderer directions={props.directions} />}
-  </GoogleMap>
-));
-
+)(
+  props =>
+    props.directions ? (
+      <GoogleMap defaultZoom={14}>
+        <DirectionsRenderer directions={props.directions} />
+      </GoogleMap>
+    ) : (
+      <Icon
+        type="loading"
+        style={{ position: 'absolute', top: '45%', left: '50%' }}
+      />
+    ),
+);
 export default MapDirection;

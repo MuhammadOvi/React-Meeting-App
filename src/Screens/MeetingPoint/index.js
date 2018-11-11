@@ -74,13 +74,17 @@ class MeetingPoint extends Component {
         },
         name: place.name,
       },
-      setBy: localStorage.getItem('uid'),
-      setByAvatar: personToMeet.myData.avatar,
-      setByName: personToMeet.myData.name,
-      with: personToMeet.uid,
-      withAvatar: personToMeet.userImages[0],
-      withEmail: personToMeet.email,
-      withName: personToMeet.name,
+      setBy: {
+        avatar: personToMeet.myData.avatar,
+        id: localStorage.getItem('uid'),
+        name: personToMeet.myData.name,
+      },
+      setWith: {
+        avatar: personToMeet.userImages[0],
+        email: personToMeet.email,
+        id: personToMeet.uid,
+        name: personToMeet.name,
+      },
     };
 
     localStorage.setItem('meeting', JSON.stringify(meeting));
@@ -122,7 +126,9 @@ class MeetingPoint extends Component {
   };
 
   searchLocation(value) {
-    const { coords } = this.state;
+    const {
+      personToMeet: { coords },
+    } = this.state;
 
     this.setState({ data: [], listLoading: true, searched: true });
 
@@ -142,7 +148,7 @@ class MeetingPoint extends Component {
   render() {
     const {
       btnLoading,
-      coords,
+      personToMeet: { coords },
       data,
       destination,
       listLoading,
@@ -282,10 +288,10 @@ class MeetingPoint extends Component {
           <Button
             loading={btnLoading}
             style={{
-              bottom: 20,
+              bottom: 30,
               float: 'right',
-              position: 'absolute',
-              right: 20,
+              position: 'fixed',
+              right: 30,
             }}
             onClick={this.cancelMeeting}
             icon="close"

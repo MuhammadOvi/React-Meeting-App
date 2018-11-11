@@ -15,12 +15,11 @@ import firebase from '../../../../Config/firebase';
 
 const Meetings = firebase.firestore().collection('Meetings');
 
-export default class AcceptedDrawer extends Component {
+export default class PendingDrawer extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      coords: {},
       destination: {},
       mapVisible: false,
     };
@@ -30,48 +29,43 @@ export default class AcceptedDrawer extends Component {
     this.setState({ mapVisible: false }, this.close());
   };
 
-  showDirection = (place, origin) => {
+  showDirection = place => {
     const {
       coords: { latitude, longitude },
     } = place;
 
     const destination = { latitude, longitude };
-    this.setState(
-      { coords: origin, destination, mapVisible: true },
-      this.close(),
-    );
+    this.setState({ destination, mapVisible: true }, this.close());
   };
 
   close = () => {
     const { close } = this.props;
-    close('ACCEPTED');
+    close('PENDING');
   };
 
   cancelMeeting = meetingID => {
+    const { myData } = this.props;
     const me = localStorage.getItem('uid');
 
     Meetings.doc(meetingID)
       .update({
         cancelledBy: me,
-        notification: me,
+        notification: {
+          by: me,
+          message: `Meeting was cancelled by ${myData.name}`,
+          seen: false,
+        },
         status: 'cancelled',
       })
-      .then(() => {
-        Message.success('Meeting Cancelled');
-        this.close();
-      })
+      .then(() => Message.success('Meeting Cancelled'))
       .catch(err => Message.error(err.message));
   };
 
-  markNotificationSeen = meetingID => {
-    Meetings.doc(meetingID)
-      .update({ notification: firebase.firestore.FieldValue.delete() })
-      .catch(err => Message.error(err.message));
-  };
+  markNotificationSeen = meetingID => {};
 
   render() {
-    const { mapVisible, destination, coords } = this.state;
-    const { visible, data } = this.props;
+    const { mapVisible, destination } = this.state;
+    const { visible, data, myData } = this.props;
     const me = localStorage.getItem('uid');
 
     let theAvatar;
@@ -79,7 +73,7 @@ export default class AcceptedDrawer extends Component {
 
     return (
       <Drawer
-        title="Accepted Meetings"
+        title="Pending Meetings"
         placement="right"
         closable
         onClose={() => this.close()}
@@ -121,9 +115,10 @@ export default class AcceptedDrawer extends Component {
                   </span>
                 </div>
                 {item.notification &&
-                  item.notification.by !== me && (
+                  item.notification.by !== me &&
+                  !item.notification.seen && (
                     <div className="notification success">
-                      <p>Meeting accepted by {theName}</p>
+                      <p>{item.notification.message}</p>
                       <Button
                         className="notification-close-btn"
                         shape="circle"
@@ -137,9 +132,7 @@ export default class AcceptedDrawer extends Component {
                 <div className="actions">
                   <Button
                     className="btn"
-                    onClick={() =>
-                      this.showDirection(item.place, item.setWith.coords)
-                    }
+                    onClick={() => this.showDirection(item.place)}
                   >
                     Show Map
                   </Button>
@@ -195,7 +188,7 @@ export default class AcceptedDrawer extends Component {
             </Button>,
           ]}
         >
-          <Map origin={coords} destination={destination} />
+          <Map origin={myData.coords} destination={destination} />
         </Modal>
       </Drawer>
     );

@@ -47,15 +47,28 @@ class Home extends Component {
     this.state = {
       beverages: [],
       btnLoading: false,
-      drawerAcceptedVisible: true,
+
+      drawerAcceptedVisible: false, // done
       drawerCancelVisible: false,
       drawerDoneVisible: false,
       drawerNotificationsVisible: false,
-      drawerPendingVisible: false,
+      drawerPendingVisible: false, // done
+      drawerRejectedVisible: false,
       drawerRequestedVisible: false,
+
       duration: [],
+
+      meetingAccepted: [],
+      meetingCancelled: [],
+      meetingDone: [],
+      meetingNotifications: [],
+      meetingPending: [],
+      meetingRejected: [],
+      meetingRequested: [],
+
       meetingsSetByMe: [],
       meetingsSetForMe: [],
+
       myData: {},
       notifications: [],
       screenLoading: true,
@@ -106,6 +119,7 @@ class Home extends Component {
 
         this.checkMeetingsSetByMe();
         this.checkMeetingsSetForMe();
+        this.checkNotifications();
       })
       .catch(err => {
         Message.error('Something Went Wrong! Try Again Later.');
@@ -126,10 +140,7 @@ class Home extends Component {
       ({ docs }) => {
         // setting all the meetingsSetByMe in one place
         const meetingsSetByMe = docs.map(item => item.data());
-        this.setState(
-          { meetingsSetByMe, screenLoading: false },
-          this.checkNotifications(),
-        );
+        this.setState({ meetingsSetByMe, screenLoading: false });
       },
     );
   };
@@ -137,14 +148,11 @@ class Home extends Component {
   checkMeetingsSetForMe = () => {
     if (!this.mounted) return;
     this.setState({ screenLoading: true });
-    Meetings.where('with', '==', localStorage.getItem('uid')).onSnapshot(
+    Meetings.where('setWith', '==', localStorage.getItem('uid')).onSnapshot(
       ({ docs }) => {
         // setting all the meetingsSetForMe in one place
         const meetingsSetForMe = docs.map(item => item.data());
-        this.setState(
-          { meetingsSetForMe, screenLoading: false },
-          this.checkNotifications(),
-        );
+        this.setState({ meetingsSetForMe, screenLoading: false });
       },
     );
   };
@@ -153,7 +161,7 @@ class Home extends Component {
     if (!this.mounted) return;
     this.setState({ screenLoading: true });
     Meetings.where('status', '==', 'unseen')
-      .where('with', '==', localStorage.getItem('uid'))
+      .where('setWith', '==', localStorage.getItem('uid'))
       .onSnapshot(({ docs }) => {
         const notifications = docs.map(item => item.data());
         this.setState({ notifications, screenLoading: false });
@@ -247,34 +255,52 @@ class Home extends Component {
 
   switchDrawer = drawerName => {
     const {
-      drawerPendingVisible,
-      drawerCancelVisible,
       drawerAcceptedVisible,
+      drawerCancelVisible,
       drawerDoneVisible,
-      drawerRequestedVisible,
       drawerNotificationsVisible,
+      drawerPendingVisible,
+      drawerRejectedVisible,
+      drawerRequestedVisible,
     } = this.state;
 
     switch (drawerName) {
-      case 'PENDING':
-        this.setState({ drawerPendingVisible: !drawerPendingVisible });
-        break;
-      case 'CANCELLED':
-        this.setState({ drawerCancelVisible: !drawerCancelVisible });
-        break;
       case 'ACCEPTED':
-        this.setState({ drawerAcceptedVisible: !drawerAcceptedVisible });
+        if (!drawerAcceptedVisible) this.getAcceptedData();
+        else this.setState({ drawerAcceptedVisible: !drawerAcceptedVisible });
         break;
+
+      case 'CANCELLED':
+        if (!drawerCancelVisible) this.getCancelledData();
+        else this.setState({ drawerCancelVisible: !drawerCancelVisible });
+        break;
+
       case 'DONE':
-        this.setState({ drawerDoneVisible: !drawerDoneVisible });
+        if (!drawerDoneVisible) this.getDoneData();
+        else this.setState({ drawerDoneVisible: !drawerDoneVisible });
         break;
-      case 'REQUESTED':
-        this.setState({ drawerRequestedVisible: !drawerRequestedVisible });
-        break;
+
       case 'NOTIFICATION':
-        this.setState({
-          drawerNotificationsVisible: !drawerNotificationsVisible,
-        });
+        if (!drawerNotificationsVisible) this.getNotificationData();
+        else
+          this.setState({
+            drawerNotificationsVisible: !drawerNotificationsVisible,
+          });
+        break;
+
+      case 'PENDING':
+        if (!drawerPendingVisible) this.getPendingData();
+        else this.setState({ drawerPendingVisible: !drawerPendingVisible });
+        break;
+
+      case 'REJECTED':
+        if (!drawerRejectedVisible) this.getRejectedData();
+        else this.setState({ drawerRejectedVisible: !drawerRejectedVisible });
+        break;
+
+      case 'REQUESTED':
+        if (!drawerRequestedVisible) this.getRequestedData();
+        else this.setState({ drawerRequestedVisible: !drawerRequestedVisible });
         break;
 
       default:
@@ -282,9 +308,133 @@ class Home extends Component {
     }
   };
 
+  getPendingData = () => {
+    this.setState({ screenLoading: true });
+
+    const { meetingsSetForMe, myData } = this.state;
+    const pendingMeetingsForMe = meetingsSetForMe.filter(
+      elem => elem.status === 'pending' || elem.status === 'unseen',
+    );
+
+    const data = [];
+
+    if (pendingMeetingsForMe.length > 0) {
+      for (let i = 0; i < pendingMeetingsForMe.length; i++) {
+        Users.doc(pendingMeetingsForMe[i].setBy)
+          .get()
+          .then(res => {
+            const {
+              name,
+              userImages: [avatar],
+            } = res.data();
+
+            const setBy = {
+              avatar,
+              id: pendingMeetingsForMe[i].setBy,
+              name,
+            };
+
+            const setWith = {
+              avatar: myData.avatar,
+              coords: myData.coords,
+              id: localStorage.getItem('uid'),
+              name: myData.name,
+            };
+
+            data.push({
+              ...pendingMeetingsForMe[i],
+              setBy,
+              setWith,
+            });
+            if (i === pendingMeetingsForMe.length - 1)
+              this.setState({
+                drawerPendingVisible: true,
+                meetingPending: data,
+                screenLoading: false,
+              });
+          });
+      }
+    } else {
+      this.setState({
+        drawerPendingVisible: true,
+        meetingPending: [],
+        screenLoading: false,
+      });
+    }
+  };
+
+  getAcceptedData = () => {
+    this.setState({ screenLoading: true });
+
+    const { meetingsSetByMe, meetingsSetForMe, myData } = this.state;
+
+    const acceptedMeetingsByMe = meetingsSetByMe.filter(
+      elem => elem.status === 'accepted',
+    );
+    const acceptedMeetingsForMe = meetingsSetForMe.filter(
+      elem => elem.status === 'accepted',
+    );
+    const acceptedMeetings = [
+      ...acceptedMeetingsByMe,
+      ...acceptedMeetingsForMe,
+    ];
+
+    const data = [];
+
+    if (acceptedMeetings.length > 0) {
+      for (let i = 0; i < acceptedMeetings.length; i++) {
+        Users.doc(acceptedMeetings[i].setBy)
+          .get()
+          .then(res => {
+            const {
+              name,
+              userImages: [avatar],
+            } = res.data();
+
+            const setBy = {
+              avatar,
+              id: acceptedMeetings[i].setBy,
+              name,
+            };
+
+            const setWith = {
+              avatar: myData.avatar,
+              id: localStorage.getItem('uid'),
+              name: myData.name,
+            };
+
+            data.push({
+              ...acceptedMeetings[i],
+              coords: myData.coords,
+              setBy,
+              setWith,
+            });
+            if (i === acceptedMeetings.length - 1)
+              this.setState({
+                drawerAcceptedVisible: true,
+                meetingAccepted: data,
+                screenLoading: false,
+              });
+          });
+      }
+    } else {
+      this.setState({
+        drawerAcceptedVisible: true,
+        meetingAccepted: [],
+        screenLoading: false,
+      });
+    }
+  };
+
   cancelMeeting = meetingID => {
+    const me = localStorage.getItem('uid');
+
     Meetings.doc(meetingID)
-      .update({ cancelledBy: localStorage.getItem('uid'), status: 'cancelled' })
+      .update({
+        cancelledBy: me,
+        notification: me,
+        status: 'cancelled',
+      })
       .then(() => Message.success('Meeting Cancelled'))
       .catch(err => Message.error(err.message));
   };
@@ -298,6 +448,14 @@ class Home extends Component {
       drawerDoneVisible,
       drawerRequestedVisible,
       drawerNotificationsVisible,
+
+      meetingAccepted,
+      meetingCancelled,
+      meetingDone,
+      meetingNotifications,
+      meetingPending,
+      meetingRequested,
+
       meetingsSetByMe,
       meetingsSetForMe,
       myData,
@@ -326,7 +484,7 @@ class Home extends Component {
 
     // All meetings set by me
     const cancelledMeetingsByMe = meetingsSetByMe.filter(
-      elem => elem.status === 'cancelled',
+      elem => elem.status === 'cancelled' || elem.status === 'rejected',
     );
     const acceptedMeetingsByMe = meetingsSetByMe.filter(
       elem => elem.status === 'accepted',
@@ -346,7 +504,7 @@ class Home extends Component {
       elem => elem.status === 'pending' || elem.status === 'unseen',
     );
     const cancelledMeetingsForMe = meetingsSetForMe.filter(
-      elem => elem.status === 'cancelled',
+      elem => elem.status === 'cancelled' || elem.status === 'rejected',
     );
     const acceptedMeetingsForMe = meetingsSetForMe.filter(
       elem => elem.status === 'accepted',
@@ -481,42 +639,39 @@ class Home extends Component {
           icon="plus"
           onClick={this.findMatch}
         />
+        <AcceptedDrawer
+          visible={drawerAcceptedVisible}
+          close={this.switchDrawer}
+          data={meetingAccepted}
+        />
         <PendingDrawer
           visible={drawerPendingVisible}
           close={this.switchDrawer}
-          data={pendingMeetings}
-          myAvatar={avatar}
+          data={meetingPending}
         />
         <CancelledDrawer
           visible={drawerCancelVisible}
           close={this.switchDrawer}
           data={cancelledMeetings}
-          myAvatar={avatar}
-        />
-        <AcceptedDrawer
-          visible={drawerAcceptedVisible}
-          close={this.switchDrawer}
-          data={acceptedMeetings}
           myData={myData}
-          cancelMeeting={this.cancelMeeting}
         />
         <DoneDrawer
           visible={drawerDoneVisible}
           close={this.switchDrawer}
           data={doneMeetings}
-          myAvatar={avatar}
+          myData={myData}
         />
         <RequestedDrawer
           visible={drawerRequestedVisible}
           close={this.switchDrawer}
           data={requestedMeetings}
-          myAvatar={avatar}
+          myData={myData}
         />
         <Notifications
           visible={drawerNotificationsVisible}
           close={this.switchDrawer}
           data={notifications}
-          myAvatar={avatar}
+          myData={myData}
         />
       </div>
     );

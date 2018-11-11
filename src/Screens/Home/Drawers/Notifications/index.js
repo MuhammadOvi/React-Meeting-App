@@ -78,7 +78,7 @@ export default class Notifications extends Component {
             width: '100%',
           }}
         >
-          {data.length > 0 ? (
+          {data.length > 100 ? (
             <Col span={24} style={{ textAlign: 'center' }}>
               {data.map(elem => (
                 <Card

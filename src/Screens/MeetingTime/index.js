@@ -54,25 +54,29 @@ class MeetingTime extends Component {
   };
 
   sendRequest = () => {
-    const { date, time } = this.state;
-    let { meeting } = this.state;
+    const { date, time, meeting } = this.state;
 
     this.setState({ btnLoading: true });
 
     const data = {
       date,
+      place: meeting.place,
+      setBy: meeting.setBy.id,
+      setWith: meeting.setWith.id,
       status: 'unseen',
       time,
     };
 
-    meeting = { ...meeting, ...data };
-
     const ref = Meetings.doc();
     Meetings.doc(ref.id)
-      .set({ ...meeting, ...data, id: ref.id })
+      .set({ ...data, id: ref.id })
       .then(() => {
         localStorage.removeItem('meeting');
-        this.setState({ btnLoading: false, meeting, meetingSet: true });
+        this.setState({
+          btnLoading: false,
+          meeting: { ...meeting, date, time },
+          meetingSet: true,
+        });
       });
   };
 
@@ -100,6 +104,8 @@ class MeetingTime extends Component {
 
     const { history } = this.props;
 
+    const name = meeting.setWith ? meeting.setWith.name : '';
+
     return (
       <div className="section">
         {screenLoading && (
@@ -119,7 +125,7 @@ class MeetingTime extends Component {
         {!meetingSet ? (
           <div>
             <h2>When to meet?</h2>
-            <p>Select a time to meet {meeting.withName}</p>
+            <p>Select a time to meet {name}</p>
 
             <DatePicker
               size="large"
@@ -134,9 +140,9 @@ class MeetingTime extends Component {
 
             {date &&
               time &&
-              meeting.withName && (
+              meeting.setWith && (
                 <Popconfirm
-                  title={`Sure want to send request to ${meeting.withName}?`}
+                  title={`Sure want to send request to ${name}?`}
                   onConfirm={this.sendRequest}
                   okText="Yes"
                   cancelText="No"
@@ -172,7 +178,7 @@ class MeetingTime extends Component {
         ) : (
           <div className="new-meeting">
             <h2 style={{ fontWeight: 'lighter' }}>
-              Meeting Set with {meeting.withName}!<br />
+              Meeting Set with {name}!<br />
               On {meeting.date} at {meeting.time}
             </h2>
             <br />
@@ -190,15 +196,15 @@ class MeetingTime extends Component {
             <AddToCalendar
               displayItemIcons={false}
               event={{
-                description: `Have a meeting with ${
-                  meeting.withName
-                } created with MEETLO APP! at ${meeting.place.name}`,
+                description: `Have a meeting with ${name} created with MEETLO APP! at ${
+                  meeting.place.name
+                }`,
                 location: `${meeting.place.name} ${meeting.place.address}`,
                 startTime: `${moment(
                   `${meeting.date} ${meeting.time}`,
                   'DD-MM-YYYY hh:mm A',
                 ).format()}`,
-                title: `Meeting with ${meeting.withName}`,
+                title: `Meeting with ${name}`,
               }}
             />
           </div>
