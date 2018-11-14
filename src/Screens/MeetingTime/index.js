@@ -59,12 +59,14 @@ class MeetingTime extends Component {
     this.setState({ btnLoading: true });
 
     const data = {
+      created: firebase.firestore.FieldValue.serverTimestamp(),
       date,
       place: meeting.place,
       setBy: meeting.setBy.id,
       setWith: meeting.setWith.id,
       status: 'unseen',
       time,
+      updated: firebase.firestore.FieldValue.serverTimestamp(),
     };
 
     const ref = Meetings.doc();

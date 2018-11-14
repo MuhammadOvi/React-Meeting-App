@@ -3,15 +3,23 @@ import './App.css';
 import { BrowserRouter, Route, Switch } from 'react-router-dom';
 import { message as Message } from 'antd';
 
-import Login from './Screens/Login';
-import Home from './Screens/Home';
-import Step1 from './Screens/Step1';
-import Step2 from './Screens/Step2';
-import Step3 from './Screens/Step3';
-import Step4 from './Screens/Step4';
-import MeetingPoint from './Screens/MeetingPoint';
-import MeetingTime from './Screens/MeetingTime';
-import MatchingUsers from './Screens/MatchingUsers';
+import {
+  Home,
+  Login,
+  MatchingUsers,
+  MeetingPoint,
+  MeetingTime,
+  MeetingsAccepted,
+  MeetingsCancelled,
+  MeetingsDone,
+  MeetingsExpired,
+  MeetingsPending,
+  MeetingsRequested,
+  Step1,
+  Step2,
+  Step3,
+  Step4,
+} from './Screens';
 
 class App extends Component {
   componentDidMount() {
@@ -35,6 +43,30 @@ class App extends Component {
 
             <Route exact path="/meeting/location" component={MeetingPoint} />
             <Route exact path="/meeting/time" component={MeetingTime} />
+
+            <Route
+              exact
+              path="/meetings/accepted"
+              component={MeetingsAccepted}
+            />
+            <Route exact path="/meetings/pending" component={MeetingsPending} />
+            <Route
+              exact
+              path="/meetings/cancelled"
+              component={MeetingsCancelled}
+            />
+            <Route
+              exact
+              path="/meetings/rejected"
+              component={MeetingsCancelled}
+            />
+            <Route exact path="/meetings/done" component={MeetingsDone} />
+            <Route exact path="/meetings/expired" component={MeetingsExpired} />
+            <Route
+              exact
+              path="/meetings/requested"
+              component={MeetingsRequested}
+            />
 
             <Route exact path="/matching-users" component={MatchingUsers} />
 

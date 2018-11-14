@@ -182,3 +182,21 @@
   background: #ff4081;
   color: white;
 }
+
+.rating {
+  width: 100%;
+  height: auto;
+  padding: 15px;
+  border-top: 1px solid rgba(128, 128, 128, 0.5);
+  text-align: center;
+}
+
+.rating p,
+ul.ant-rate {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.rating .my-rating {
+  margin-bottom: 10px;
+}
