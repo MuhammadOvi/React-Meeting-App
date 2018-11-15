@@ -11,10 +11,12 @@ import {
   MeetingTime,
   MeetingsAccepted,
   MeetingsCancelled,
+  MeetingsComplicated,
   MeetingsDone,
   MeetingsExpired,
   MeetingsPending,
   MeetingsRequested,
+  Notifications,
   Step1,
   Step2,
   Step3,
@@ -57,6 +59,11 @@ class App extends Component {
             />
             <Route
               exact
+              path="/meetings/complicated"
+              component={MeetingsComplicated}
+            />
+            <Route
+              exact
               path="/meetings/rejected"
               component={MeetingsCancelled}
             />
@@ -67,6 +74,7 @@ class App extends Component {
               path="/meetings/requested"
               component={MeetingsRequested}
             />
+            <Route exact path="/notifications" component={Notifications} />
 
             <Route exact path="/matching-users" component={MatchingUsers} />
 

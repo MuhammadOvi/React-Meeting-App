@@ -38,7 +38,6 @@ export default class MeetingsDone extends Component {
     Meetings.where('setBy', '==', localStorage.getItem('uid'))
       .orderBy('updated', 'desc')
       .where('status', '==', 'expired')
-      .where('expired', '==', 'accepted')
       .onSnapshot(({ docs }) => {
         // setting all the meetingsSetByMe in one place
         const meetingsSetByMe = docs.map(item => item.data());
@@ -54,7 +53,6 @@ export default class MeetingsDone extends Component {
     Meetings.where('setWith', '==', localStorage.getItem('uid'))
       .orderBy('updated', 'desc')
       .where('status', '==', 'expired')
-      .where('expired', '==', 'accepted')
       .onSnapshot(({ docs }) => {
         // setting all the meetingsSetForMe in one place
         const meetingsSetForMe = docs.map(item => item.data());
@@ -66,7 +64,8 @@ export default class MeetingsDone extends Component {
 
   bringOtherUsersData = () => {
     const { meetingsSetByMe, meetingsSetForMe, otherUsersData } = this.state;
-    const data = [...meetingsSetByMe, ...meetingsSetForMe];
+    let data = [...meetingsSetByMe, ...meetingsSetForMe];
+    data = data.filter(elem => elem.expired !== 'pending');
     const me = localStorage.getItem('uid');
 
     const idToFind = [];
@@ -106,29 +105,49 @@ export default class MeetingsDone extends Component {
     history.push('/home');
   };
 
-  markSuccessful = (meetingID, success) => {
+  markSuccessful = meetingID => {
     const me = localStorage.getItem('uid');
 
+    const obj = {
+      notification: firebase.firestore.FieldValue.delete(),
+      [`successful.${me}`]: true,
+      updated: firebase.firestore.FieldValue.serverTimestamp(),
+    };
+
     Meetings.doc(meetingID)
-      .update({
-        [`successful.${me}`]: success,
-        updated: firebase.firestore.FieldValue.serverTimestamp(),
-      })
+      .update(obj)
       .then(() => {
-        Message.success(
-          success
-            ? 'Wow! How was that?'
-            : 'Sorry to know that, maybe next time :)',
-        );
+        Message.success('Wow! How was that?');
       })
       .catch(err => Message.error(err.message));
   };
 
-  markNotificationSeen = meetingID => {
+  markUnSuccessful = meetingID => {
+    const { meetingsSetByMe, meetingsSetForMe } = this.state;
+    let data = [...meetingsSetByMe, ...meetingsSetForMe];
+    data = data.filter(elem => elem.expired !== 'pending');
+    const [currentMeeting] = data.filter(elem => elem.id === meetingID);
+
+    const me = localStorage.getItem('uid');
+
+    const obj = {
+      expired:
+        currentMeeting.expired && currentMeeting.expired === 'complicated'
+          ? 'cancelled'
+          : 'complicated',
+      notification: firebase.firestore.FieldValue.delete(),
+      [`successful.${me}`]: false,
+      unsuccessful:
+        currentMeeting.unsuccessful && currentMeeting.unsuccessful !== me
+          ? 'both'
+          : me,
+      updated: firebase.firestore.FieldValue.serverTimestamp(),
+    };
+
     Meetings.doc(meetingID)
-      .update({
-        notification: firebase.firestore.FieldValue.delete(),
-        updated: firebase.firestore.FieldValue.serverTimestamp(),
+      .update(obj)
+      .then(() => {
+        Message.success('Sorry to know that, maybe next time :)');
       })
       .catch(err => Message.error(err.message));
   };
@@ -151,7 +170,8 @@ export default class MeetingsDone extends Component {
       otherUsersData,
     } = this.state;
 
-    const data = [...meetingsSetByMe, ...meetingsSetForMe];
+    let data = [...meetingsSetByMe, ...meetingsSetForMe];
+    data = data.filter(elem => elem.expired !== 'pending');
     const me = localStorage.getItem('uid');
 
     return (
@@ -194,7 +214,7 @@ export default class MeetingsDone extends Component {
           />
         </div>
 
-        {data.length > 0 ? (
+        {data.length > 0 &&
           data.map(item => {
             const [withUser] = otherUsersData.filter(
               user =>
@@ -208,104 +228,118 @@ export default class MeetingsDone extends Component {
             if (item.setBy === me) otherUserID = item.setWith;
             else otherUserID = item.setBy;
 
-            return (
-              <Skeleton key={item.id} loading={!withUser}>
-                <div className="data-card">
-                  <div className="data">
-                    <ModalImage
-                      className="img"
-                      small={avatar}
-                      medium={avatar}
-                      alt={name}
-                    />
-                    <span className="name">{name}</span>
-                    <span className="place">
-                      <Icon type="home" /> {item.place.name}
-                    </span>
-                    <span className="time">
-                      {item.date} (<b>{item.time}</b>)
-                    </span>
-                    <span className="info">
-                      Set by {item.setBy === me ? 'me' : name}
-                    </span>
-                  </div>
-                  {item.notification &&
-                    item.notification !== me && (
-                      <div className="notification success">
-                        <p>Meeting accepted by {name}</p>
-                        <Button
-                          className="notification-close-btn"
-                          shape="circle"
-                          icon="close"
-                          size="small"
-                          type="danger"
-                          onClick={() => this.markNotificationSeen(item.id)}
-                        />
+            if (
+              !item.unsuccessful ||
+              (item.unsuccessful &&
+                (item.unsuccessful !== me && item.unsuccessful !== 'both'))
+            ) {
+              return (
+                <Skeleton
+                  key={item.id}
+                  loading={!withUser}
+                  title={{ width: '100%' }}
+                  active
+                  paragraph={{ rows: 6 }}
+                >
+                  <div className="data-card">
+                    <div className="data">
+                      <ModalImage
+                        className="img"
+                        small={avatar}
+                        medium={avatar}
+                        alt={name}
+                      />
+                      <span className="name">{name}</span>
+                      <span className="place">
+                        <Icon type="home" /> {item.place.name}
+                      </span>
+                      <span className="time">
+                        {item.date} (<b>{item.time}</b>)
+                      </span>
+                      <span className="info">
+                        Set by {item.setBy === me ? 'me' : name}
+                      </span>
+                    </div>
+                    {// if not reviewed by me, not yes, no or any rating
+                    (item.successful && item.successful[me]) ||
+                    (item.unsuccessful === me ||
+                      item.unsuccessful === 'both') ? (
+                      // eslint-disable-next-line react/jsx-indent
+                      <div className="rating">
+                        {/* if unsuccessful by me */}
+                        <div className="my-rating">
+                          {item.unsuccessful && item.unsuccessful === me ? (
+                            <p>Meeting was marked unsuccessful by me!</p>
+                          ) : (
+                            <div>
+                              <p>Rating By Me:</p>
+                              <Rate
+                                value={
+                                  item.rating && item.rating[me]
+                                    ? item.rating[me]
+                                    : 0
+                                }
+                                allowClear={false}
+                                onChange={value =>
+                                  this.rateMeeting(item.id, value)
+                                }
+                              />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* if unsuccessful by Other person */}
+                        <div className="other-rating">
+                          {item.unsuccessful &&
+                          item.unsuccessful === otherUserID ? (
+                            <p>Meeting was marked unsuccessful by {name}!</p>
+                          ) : (
+                            <div>
+                              <p>Rating By {name}:</p>
+                              {item.rating && item.rating[otherUserID] ? (
+                                <Rate
+                                  disabled
+                                  value={item.rating[otherUserID || 0]}
+                                />
+                              ) : (
+                                <p>No ratings yet!</p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <p style={{ textAlign: 'center' }}>
+                          Was the meeting successful?
+                        </p>
+                        <div className="actions">
+                          <Button
+                            type="primary"
+                            className="btn"
+                            onClick={() => this.markSuccessful(item.id)}
+                          >
+                            Yes!
+                          </Button>
+                          <Button
+                            type="danger"
+                            className="btn"
+                            onClick={() => this.markUnSuccessful(item.id)}
+                          >
+                            No!
+                          </Button>
+                        </div>
                       </div>
                     )}
-                  {item.successful && item.successful[me] ? (
-                    <div className="rating">
-                      <div className="my-rating">
-                        <p>Rating By Me:</p>
-                        <Rate
-                          value={
-                            item.rating && item.rating[me] ? item.rating[me] : 0
-                          }
-                          allowClear={false}
-                          onChange={value => this.rateMeeting(item.id, value)}
-                        />
-                      </div>
-                      <div className="other-rating">
-                        <p>Rating By {name}:</p>
-                        {item.rating && item.rating[otherUserID] ? (
-                          <Rate
-                            disabled
-                            value={item.rating[otherUserID || 0]}
-                          />
-                        ) : (
-                          <p>No ratings yet!</p>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <div>
-                      <p style={{ textAlign: 'center' }}>
-                        Was the meeting successful?
-                      </p>
-                      <div className="actions">
-                        <Button
-                          type="primary"
-                          className="btn"
-                          onClick={() => this.markSuccessful(item.id, true)}
-                        >
-                          Yes!
-                        </Button>
-                        <Button
-                          type="danger"
-                          className="btn"
-                          onClick={() => this.markSuccessful(item.id, false)}
-                        >
-                          No!
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </Skeleton>
-            );
-          })
-        ) : (
-          <div
-            className="data-card"
-            style={{
-              alignItems: 'center',
-              display: 'flex',
-              justifyContent: 'center',
-            }}
-          >
-            <h3>No Data</h3>
-          </div>
-        )}
+                  </div>
+                </Skeleton>
+              );
+            }
+            return null;
+          })}
+        <div className="data-card no-data">
+          <h3>No Data</h3>
+        </div>
       </div>
     );
   }

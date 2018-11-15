@@ -1,0 +1,16 @@
+.avatars img.img {
+  width: 80px;
+  height: 84px;
+  border-radius: 50%;
+  padding: 8px;
+  border: 4px solid #e91e63;
+}
+
+.avatars img.img:first-child {
+  border-color: #757575;
+  border-right: none;
+}
+
+.avatars img.img:last-child {
+  border-left: none;
+}

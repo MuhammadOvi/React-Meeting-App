@@ -9,9 +9,7 @@
   border-radius: 5px;
   padding: 0;
   padding-top: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding-bottom: 50px;
   overflow: auto;
 }
 
@@ -62,6 +60,8 @@
   min-height: 110px;
   padding: 10px;
   padding-left: 110px;
+  z-index: 2;
+  background: #fff;
 }
 
 .data .img {
@@ -199,4 +199,40 @@ ul.ant-rate {
 
 .rating .my-rating {
   margin-bottom: 10px;
+}
+
+.data-card.expired {
+  color: darkgray;
+}
+
+.__react_modal_image__header {
+  padding: 5px;
+}
+
+.data-card.no-data {
+  position: fixed;
+  width: 120px;
+  padding: 15px 20px;
+  top: 65px;
+  left: calc(50% - 60px);
+  min-height: auto;
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  margin: auto;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.16), 0 1px 3px rgba(0, 0, 0, 0.03);
+  animation: showNoData 3s;
+  opacity: 1;
+}
+
+@keyframes showNoData {
+  0% {
+    opacity: 0;
+  }
+  80% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }

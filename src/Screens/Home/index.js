@@ -13,7 +13,6 @@ import {
   List,
   Badge,
 } from 'antd';
-import moment from 'moment-timezone';
 import isLoggedIn from '../../Helper';
 import firebase from '../../Config/firebase';
 
@@ -112,6 +111,7 @@ class Home extends Component {
   checkAll = () => {
     this.checkMeetingsSetByMe();
     this.checkMeetingsSetForMe();
+    this.checkNotifications();
   };
 
   checkMeetingsSetByMe = () => {
@@ -123,9 +123,7 @@ class Home extends Component {
         // setting all the meetingsSetByMe in one place
         const meetingsSetByMe = docs.map(item => item.data());
         if (this.mounted);
-        this.setState({ meetingsSetByMe, screenLoading: false }, () =>
-          this.checkExpired(),
-        );
+        this.setState({ meetingsSetByMe, screenLoading: false });
       },
     );
   };
@@ -139,9 +137,7 @@ class Home extends Component {
         // setting all the meetingsSetForMe in one place
         const meetingsSetForMe = docs.map(item => item.data());
         if (this.mounted);
-        this.setState({ meetingsSetForMe, screenLoading: false }, () =>
-          this.checkExpired(),
-        );
+        this.setState({ meetingsSetForMe, screenLoading: false });
       },
     );
   };
@@ -155,48 +151,8 @@ class Home extends Component {
       .onSnapshot(({ docs }) => {
         const notifications = docs.map(item => item.data());
         if (this.mounted);
-        this.setState({ notifications, screenLoading: false }, () =>
-          this.checkExpired(),
-        );
+        this.setState({ notifications, screenLoading: false });
       });
-  };
-
-  checkExpired = () => {
-    const { meetingsSetByMe, meetingsSetForMe } = this.state;
-    const data = [...meetingsSetByMe, ...meetingsSetForMe];
-
-    const dbPromises = [];
-    for (let i = 0; i < data.length; i++) {
-      const item = data[i];
-      if (
-        item.status !== 'cancelled' &&
-        item.status !== 'rejected' &&
-        item.status !== 'expired' &&
-        (item.expired && item.expired !== 'accepted')
-      ) {
-        const dateTime = moment(
-          `${item.date} ${item.time}`,
-          'DD-MM-YYYY hh:mm A',
-        ).format();
-        const expired = moment(dateTime).isBefore();
-        if (expired)
-          dbPromises.push(
-            Meetings.doc(item.id)
-              .update({
-                expired: 'accepted',
-                status: 'expired',
-                updated: firebase.firestore.FieldValue.serverTimestamp(),
-              })
-              .catch(err => Message.error(err.message)),
-          );
-      }
-    }
-
-    if (dbPromises.length > 0) {
-      Promise.all(dbPromises).catch(err => {
-        console.log('err->', err);
-      });
-    }
   };
 
   // Find bevarages matching users
@@ -305,6 +261,9 @@ class Home extends Component {
       case 'CANCELLED':
         history.push('/meetings/cancelled');
         break;
+      case 'COMPLICATED':
+        history.push('/meetings/complicated');
+        break;
       case 'DONE':
         history.push('/meetings/done');
         break;
@@ -318,7 +277,7 @@ class Home extends Component {
         history.push('/meetings/requested');
         break;
       case 'NOTIFICATION':
-        history.push('/meetings/notification');
+        history.push('/notifications');
         break;
       default:
         break;
@@ -352,6 +311,8 @@ class Home extends Component {
       </Menu>
     );
 
+    const me = localStorage.getItem('uid');
+
     const allMeetings = [...meetingsSetByMe, ...meetingsSetForMe];
 
     const acceptedMeetings = allMeetings.filter(
@@ -360,8 +321,18 @@ class Home extends Component {
     const cancelledMeetings = allMeetings.filter(
       elem => elem.status === 'cancelled' || elem.status === 'rejected',
     );
+    const complicatedMeetings = allMeetings.filter(
+      elem =>
+        elem.status === 'expired' &&
+        elem.expired === 'complicated' &&
+        (elem.unsuccessful && elem.unsuccessful === me),
+    );
     const doneMeetings = allMeetings.filter(
-      elem => elem.status === 'expired' && elem.expired === 'accepted',
+      elem =>
+        elem.status === 'expired' &&
+        (!elem.unsuccessful ||
+          (elem.unsuccessful &&
+            (elem.unsuccessful !== me && elem.unsuccessful !== 'both'))),
     );
 
     const expiredMeetings = allMeetings.filter(
@@ -394,26 +365,32 @@ class Home extends Component {
         title: 'CANCELLED REQUESTS',
       },
       {
-        desc: `${doneMeetings.length} Meetings Done`,
+        desc: `${complicatedMeetings.length} Meetings Cancelled`,
         id: 3,
+        name: 'COMPLICATED',
+        title: 'COMPLICATED REQUESTS',
+      },
+      {
+        desc: `${doneMeetings.length} Meetings Done`,
+        id: 4,
         name: 'DONE',
         title: 'MEETINGS DONE',
       },
       {
         desc: `${expiredMeetings.length} Meetings Expired`,
-        id: 4,
+        id: 5,
         name: 'EXPIRED',
         title: 'MEETINGS EXPIRED',
       },
       {
         desc: `${pendingMeetings.length} Meetings Request Pending`,
-        id: 5,
+        id: 6,
         name: 'PENDING',
         title: 'PENDING REQUESTS',
       },
       {
         desc: `${requestedMeetings.length} Requested Meetings`,
-        id: 5,
+        id: 7,
         name: 'REQUESTED',
         title: 'REQUESTED BY ME',
       },
@@ -466,7 +443,7 @@ class Home extends Component {
                     style={{ fontSize: '2em', height: 50, width: 50 }}
                     icon="bell"
                     size="large"
-                    onClick={() => this.switchDrawer('NOTIFICATION')}
+                    onClick={() => this.switchPage('NOTIFICATION')}
                   />
                 </Badge>
                 <p>You have some new meeting requests!</p>

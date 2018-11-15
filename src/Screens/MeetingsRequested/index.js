@@ -209,7 +209,7 @@ export default class MeetingsRequested extends Component {
           />
         </div>
 
-        {data.length > 0 ? (
+        {data.length > 0 &&
           data.map(item => {
             const [withUser] = otherUsersData.filter(
               user =>
@@ -220,7 +220,13 @@ export default class MeetingsRequested extends Component {
             const { name } = withUser || '';
 
             return (
-              <Skeleton key={item.id} loading={!withUser} active>
+              <Skeleton
+                key={item.id}
+                loading={!withUser}
+                title={{ width: '100%' }}
+                active
+                paragraph={{ rows: 4 }}
+              >
                 <div className="data-card">
                   <div className="data">
                     <ModalImage
@@ -248,19 +254,10 @@ export default class MeetingsRequested extends Component {
                 </div>
               </Skeleton>
             );
-          })
-        ) : (
-          <div
-            className="data-card"
-            style={{
-              alignItems: 'center',
-              display: 'flex',
-              justifyContent: 'center',
-            }}
-          >
-            <h3>No Data</h3>
-          </div>
-        )}
+          })}
+        <div className="data-card no-data">
+          <h3>No Data</h3>
+        </div>
         <Modal
           style={{ top: 10 }}
           visible={mapVisible}

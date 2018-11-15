@@ -5,10 +5,12 @@ import MeetingPoint from './MeetingPoint';
 import MeetingTime from './MeetingTime';
 import MeetingsAccepted from './MeetingsAccepted';
 import MeetingsCancelled from './MeetingsCancelled';
+import MeetingsComplicated from './MeetingsComplicated';
 import MeetingsDone from './MeetingsDone';
 import MeetingsExpired from './MeetingsExpired';
 import MeetingsPending from './MeetingsPending';
 import MeetingsRequested from './MeetingsRequested';
+import Notifications from './Notifications';
 import Step1 from './Step1';
 import Step2 from './Step2';
 import Step3 from './Step3';
@@ -22,10 +24,12 @@ export {
   MeetingTime,
   MeetingsAccepted,
   MeetingsCancelled,
+  MeetingsComplicated,
   MeetingsDone,
   MeetingsExpired,
   MeetingsPending,
   MeetingsRequested,
+  Notifications,
   Step1,
   Step2,
   Step3,

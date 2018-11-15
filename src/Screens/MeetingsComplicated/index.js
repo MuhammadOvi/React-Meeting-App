@@ -1,4 +1,4 @@
-// Meetings Expired
+// Meetings Complicated
 import React, { Component } from 'react';
 import ModalImage from 'react-modal-image';
 import { Icon, Button, message as Message, Skeleton } from 'antd';
@@ -7,13 +7,13 @@ import firebase from '../../Config/firebase';
 const Users = firebase.firestore().collection('Users');
 const Meetings = firebase.firestore().collection('Meetings');
 
-export default class MeetingsExpired extends Component {
+export default class MeetingsComplicated extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      expiredMeetingsSetByMe: [],
-      expiredMeetingsSetForMe: [],
+      complicatedMeetingsSetByMe: [],
+      complicatedMeetingsSetForMe: [],
       otherUsersData: [],
       screenLoading: true,
     };
@@ -22,53 +22,58 @@ export default class MeetingsExpired extends Component {
   componentDidMount() {
     this.mounted = true;
 
-    this.checkExpiredMeetingsSetByMe();
-    this.checkExpiredMeetingsSetForMe();
+    this.checkComplicatedMeetingsSetByMe();
+    this.checkComplicatedMeetingsSetForMe();
   }
 
   componentWillUnmount() {
     this.mounted = false;
   }
 
-  checkExpiredMeetingsSetByMe = () => {
+  checkComplicatedMeetingsSetByMe = () => {
     if (!this.mounted) return;
     this.setState({ screenLoading: true });
     Meetings.where('setBy', '==', localStorage.getItem('uid'))
       .orderBy('updated', 'desc')
       .where('status', '==', 'expired')
-      .where('expired', '==', 'pending')
+      .where('expired', '==', 'complicated')
       .onSnapshot(({ docs }) => {
         // setting all the meetingsSetByMe in one place
-        const expiredMeetingsSetByMe = docs.map(item => item.data());
-        this.setState({ expiredMeetingsSetByMe, screenLoading: false }, () =>
-          this.bringOtherUsersData(),
+        const complicatedMeetingsSetByMe = docs.map(item => item.data());
+        this.setState(
+          { complicatedMeetingsSetByMe, screenLoading: false },
+          () => this.bringOtherUsersData(),
         );
       });
   };
 
-  checkExpiredMeetingsSetForMe = () => {
+  checkComplicatedMeetingsSetForMe = () => {
     if (!this.mounted) return;
     this.setState({ screenLoading: true });
     Meetings.where('setWith', '==', localStorage.getItem('uid'))
       .orderBy('updated', 'desc')
       .where('status', '==', 'expired')
-      .where('expired', '==', 'pending')
+      .where('expired', '==', 'complicated')
       .onSnapshot(({ docs }) => {
         // setting all the meetingsSetForMe in one place
-        const expiredMeetingsSetForMe = docs.map(item => item.data());
-        this.setState({ expiredMeetingsSetForMe, screenLoading: false }, () =>
-          this.bringOtherUsersData(),
+        const complicatedMeetingsSetForMe = docs.map(item => item.data());
+        this.setState(
+          { complicatedMeetingsSetForMe, screenLoading: false },
+          () => this.bringOtherUsersData(),
         );
       });
   };
 
   bringOtherUsersData = () => {
     const {
-      expiredMeetingsSetByMe,
-      expiredMeetingsSetForMe,
+      complicatedMeetingsSetByMe,
+      complicatedMeetingsSetForMe,
       otherUsersData,
     } = this.state;
-    const data = [...expiredMeetingsSetByMe, ...expiredMeetingsSetForMe];
+    const data = [
+      ...complicatedMeetingsSetByMe,
+      ...complicatedMeetingsSetForMe,
+    ];
     const me = localStorage.getItem('uid');
 
     const idToFind = [];
@@ -110,13 +115,16 @@ export default class MeetingsExpired extends Component {
 
   render() {
     const {
-      expiredMeetingsSetByMe,
-      expiredMeetingsSetForMe,
+      complicatedMeetingsSetByMe,
+      complicatedMeetingsSetForMe,
       otherUsersData,
       screenLoading,
     } = this.state;
 
-    const data = [...expiredMeetingsSetByMe, ...expiredMeetingsSetForMe];
+    const data = [
+      ...complicatedMeetingsSetByMe,
+      ...complicatedMeetingsSetForMe,
+    ];
     const me = localStorage.getItem('uid');
 
     return (
@@ -138,7 +146,7 @@ export default class MeetingsExpired extends Component {
             zIndex: 2,
           }}
         >
-          <h3>Expired Meetings</h3>
+          <h3>Complicated Meetings</h3>
           <Button
             type="ghost"
             shape="circle"
@@ -169,36 +177,39 @@ export default class MeetingsExpired extends Component {
             const [avatar] = withUser ? withUser.userImages : '';
             const { name } = withUser || '';
 
-            return (
-              <Skeleton
-                key={item.id}
-                loading={!withUser}
-                title={{ width: '100%' }}
-                active
-                paragraph={{ rows: 3 }}
-              >
-                <div className="data-card expired">
-                  <div className="data">
-                    <ModalImage
-                      className="img"
-                      small={avatar}
-                      medium={avatar}
-                      alt={name}
-                    />
-                    <span className="name">{name}</span>
-                    <span className="place">
-                      <Icon type="home" /> {item.place.name}
-                    </span>
-                    <span className="time">
-                      {item.date} (<b>{item.time}</b>)
-                    </span>
-                    <span className="info">
-                      Was set by {item.setBy === me ? 'me' : name}
-                    </span>
+            if (item.unsuccessful && item.unsuccessful === me) {
+              return (
+                <Skeleton
+                  key={item.id}
+                  loading={!withUser}
+                  title={{ width: '100%' }}
+                  active
+                  paragraph={{ rows: 3 }}
+                >
+                  <div className="data-card expired">
+                    <div className="data">
+                      <ModalImage
+                        className="img"
+                        small={avatar}
+                        medium={avatar}
+                        alt={name}
+                      />
+                      <span className="name">{name}</span>
+                      <span className="place">
+                        <Icon type="home" /> {item.place.name}
+                      </span>
+                      <span className="time">
+                        {item.date} (<b>{item.time}</b>)
+                      </span>
+                      <span className="info">
+                        was set by {item.setBy === me ? 'me' : name}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              </Skeleton>
-            );
+                </Skeleton>
+              );
+            }
+            return null;
           })}
         <div className="data-card no-data">
           <h3>No Data</h3>

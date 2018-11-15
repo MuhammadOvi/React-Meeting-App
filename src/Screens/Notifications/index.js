@@ -1,5 +1,6 @@
-// Meetings Accepted
+// Meetings Notifications
 import React, { Component } from 'react';
+import './style.css';
 import ModalImage from 'react-modal-image';
 import {
   Icon,
@@ -8,16 +9,18 @@ import {
   message as Message,
   Modal,
   Skeleton,
+  Col,
+  Card,
+  Row,
 } from 'antd';
 import moment from 'moment-timezone';
-import AddToCalendar from 'react-add-to-calendar';
 import firebase from '../../Config/firebase';
 import Map from '../../Component/MapDirection';
 
 const Users = firebase.firestore().collection('Users');
 const Meetings = firebase.firestore().collection('Meetings');
 
-export default class MeetingsAccepted extends Component {
+export default class Notifications extends Component {
   constructor(props) {
     super(props);
 
@@ -25,8 +28,8 @@ export default class MeetingsAccepted extends Component {
       coords: {},
       destination: {},
       mapVisible: false,
-      meetingsSetByMe: [],
-      meetingsSetForMe: [],
+      myImg: '',
+      notifications: [],
       otherUsersData: [],
       screenLoading: true,
     };
@@ -34,50 +37,34 @@ export default class MeetingsAccepted extends Component {
 
   componentDidMount() {
     this.mounted = true;
-
-    this.checkMeetingsSetByMe();
-    this.checkMeetingsSetForMe();
+    this.checkNotifications();
+    this.bringMyImage();
   }
 
   componentWillUnmount() {
     this.mounted = false;
   }
 
-  checkMeetingsSetByMe = () => {
-    if (!this.mounted) return;
-    this.setState({ screenLoading: true });
-    Meetings.where('setBy', '==', localStorage.getItem('uid'))
-      .orderBy('updated', 'desc')
-      .where('status', '==', 'accepted')
-      .onSnapshot(({ docs }) => {
-        // setting all the meetingsSetByMe in one place
-        const meetingsSetByMe = docs.map(item => item.data());
-        this.setState({ meetingsSetByMe, screenLoading: false }, () =>
-          this.bringOtherUsersData(),
-        );
-      });
-  };
-
-  checkMeetingsSetForMe = () => {
+  checkNotifications = () => {
     if (!this.mounted) return;
     this.setState({ screenLoading: true });
     Meetings.where('setWith', '==', localStorage.getItem('uid'))
       .orderBy('updated', 'desc')
-      .where('status', '==', 'accepted')
+      .where('status', '==', 'unseen')
       .onSnapshot(({ docs }) => {
         // setting all the meetingsSetForMe in one place
-        const meetingsSetForMe = docs.map(item => item.data());
-        this.setState({ meetingsSetForMe, screenLoading: false }, () =>
-          this.bringOtherUsersData(),
-        );
+        const notifications = docs.map(item => item.data());
+        if (this.mounted)
+          this.setState({ notifications, screenLoading: false }, () =>
+            this.bringOtherUsersData(),
+          );
       });
   };
 
   bringOtherUsersData = () => {
-    const { meetingsSetByMe, meetingsSetForMe, otherUsersData } = this.state;
-    const data = [...meetingsSetByMe, ...meetingsSetForMe];
+    const { notifications, otherUsersData } = this.state;
+    const data = notifications;
     const me = localStorage.getItem('uid');
-
     const idToFind = [];
 
     for (let i = 0; i < data.length; i++) {
@@ -113,9 +100,20 @@ export default class MeetingsAccepted extends Component {
       });
   };
 
+  bringMyImage = () => {
+    Users.doc(localStorage.getItem('uid'))
+      .get()
+      .then(res => {
+        const {
+          userImages: [myImg],
+        } = res.data();
+        this.setState({ myImg });
+      });
+  };
+
   checkExpired = () => {
-    const { meetingsSetByMe, meetingsSetForMe } = this.state;
-    const data = [...meetingsSetByMe, ...meetingsSetForMe];
+    const { notifications } = this.state;
+    const data = notifications;
 
     const dbPromises = [];
     for (let i = 0; i < data.length; i++) {
@@ -129,7 +127,7 @@ export default class MeetingsAccepted extends Component {
         dbPromises.push(
           Meetings.doc(item.id)
             .update({
-              expired: 'accepted',
+              expired: 'pending',
               status: 'expired',
               updated: firebase.firestore.FieldValue.serverTimestamp(),
             })
@@ -149,14 +147,29 @@ export default class MeetingsAccepted extends Component {
     history.push('/home');
   };
 
-  cancelMeeting = meetingID => {
+  acceptMeeting = meetingID => {
+    const me = localStorage.getItem('uid');
+
+    Meetings.doc(meetingID)
+      .update({
+        notification: me,
+        status: 'accepted',
+        updated: firebase.firestore.FieldValue.serverTimestamp(),
+      })
+      .then(() => {
+        Message.success('Meeting Accepted');
+      })
+      .catch(err => Message.error(err.message));
+  };
+
+  rejectMeeting = meetingID => {
     const me = localStorage.getItem('uid');
 
     Meetings.doc(meetingID)
       .update({
         cancelledBy: me,
         notification: me,
-        status: 'cancelled',
+        status: 'rejected',
         updated: firebase.firestore.FieldValue.serverTimestamp(),
       })
       .then(() => {
@@ -165,11 +178,14 @@ export default class MeetingsAccepted extends Component {
       .catch(err => Message.error(err.message));
   };
 
-  markNotificationSeen = meetingID => {
+  skipRequest = meetingID => {
     Meetings.doc(meetingID)
       .update({
-        notification: firebase.firestore.FieldValue.delete(),
+        status: 'pending',
         updated: firebase.firestore.FieldValue.serverTimestamp(),
+      })
+      .then(() => {
+        Message.success('Meeting Skipped for Now!');
       })
       .catch(err => Message.error(err.message));
   };
@@ -190,16 +206,17 @@ export default class MeetingsAccepted extends Component {
   render() {
     const {
       screenLoading,
-      meetingsSetByMe,
-      meetingsSetForMe,
+      notifications,
       otherUsersData,
 
       mapVisible,
       coords,
       destination,
+
+      myImg,
     } = this.state;
 
-    const data = [...meetingsSetByMe, ...meetingsSetForMe];
+    const data = notifications;
     const me = localStorage.getItem('uid');
 
     return (
@@ -221,7 +238,7 @@ export default class MeetingsAccepted extends Component {
             zIndex: 2,
           }}
         >
-          <h3>Accepted Meetings</h3>
+          <h3>New Meeting Requests!</h3>
           <Button
             type="ghost"
             shape="circle"
@@ -242,98 +259,98 @@ export default class MeetingsAccepted extends Component {
           />
         </div>
 
-        {data.length > 0 &&
-          data.map(item => {
-            const [withUser] = otherUsersData.filter(
-              user =>
-                (user.uid === item.setBy) === me ? item.setWith : item.setBy,
-            );
+        <Row
+          gutter={8}
+          style={{
+            height: '100%',
+            padding: 5,
+            width: '100%',
+          }}
+        >
+          {data.length > 0 ? (
+            <Col span={24} style={{ textAlign: 'center' }}>
+              {data.map(item => {
+                const [withUser] = otherUsersData.filter(
+                  user =>
+                    (user.uid === item.setBy) === me
+                      ? item.setWith
+                      : item.setBy,
+                );
 
-            const [avatar] = withUser ? withUser.userImages : '';
-            const { name } = withUser || '';
+                const [avatar] = withUser ? withUser.userImages : '';
+                const { name } = withUser || '';
 
-            return (
-              <Skeleton
-                key={item.id}
-                loading={!withUser}
-                title={{ width: '100%' }}
-                active
-                paragraph={{ rows: 6 }}
-              >
-                <div className="data-card">
-                  <div className="data">
-                    <ModalImage
-                      className="img"
-                      small={avatar}
-                      medium={avatar}
-                      alt={name}
-                    />
-                    <span className="name">{name}</span>
-                    <span className="place">
-                      <Icon type="home" /> {item.place.name}
-                    </span>
-                    <span className="time">
-                      {item.date} (<b>{item.time}</b>)
-                    </span>
-                    <span className="info">
-                      Set by {item.setBy === me ? 'me' : name}
-                    </span>
-                  </div>
-                  {item.notification &&
-                    item.notification !== me && (
-                      <div className="notification success">
-                        <p>Meeting accepted by {name}</p>
+                return (
+                  <Skeleton
+                    key={item.id}
+                    loading={!withUser}
+                    title={{ width: '100%' }}
+                    active
+                    paragraph={{ rows: 4 }}
+                  >
+                    <Card
+                      style={{
+                        margin: 'auto',
+                        marginBottom: 15,
+                        width: 300,
+                      }}
+                      actions={[
                         <Button
-                          className="notification-close-btn"
-                          shape="circle"
-                          icon="close"
-                          size="small"
-                          type="danger"
-                          onClick={() => this.markNotificationSeen(item.id)}
+                          onClick={() => this.acceptMeeting(item.id)}
+                          icon="check"
+                        />,
+                        <Popconfirm
+                          title={`Reject ${name}'s meeting request?`}
+                          onConfirm={() => this.rejectMeeting(item.id)}
+                          okText="Yes"
+                          cancelText="No"
+                        >
+                          <Button icon="close" type="danger" />
+                        </Popconfirm>,
+                        <Button
+                          onClick={() =>
+                            this.showMap(item.place, withUser.coords)
+                          }
+                          type="primary"
+                        >
+                          Map
+                        </Button>,
+                        <Button onClick={() => this.skipRequest(item.id)}>
+                          Skip
+                        </Button>,
+                      ]}
+                    >
+                      <div className="avatars">
+                        <ModalImage
+                          className="img"
+                          small={myImg}
+                          medium={myImg}
+                          alt="Me :)"
+                        />
+                        <ModalImage
+                          className="img"
+                          small={avatar}
+                          medium={avatar}
+                          alt={name}
                         />
                       </div>
-                    )}
-                  <div className="actions">
-                    <Button
-                      className="btn"
-                      onClick={() => this.showMap(item.place, withUser.coords)}
-                    >
-                      Show Map
-                    </Button>
-                    <AddToCalendar
-                      className="add-to-calender-btn"
-                      displayItemIcons={false}
-                      buttonLabel="Add to Calender"
-                      event={{
-                        description: `Have a meeting with ${name} created with MEETLO APP! at ${
-                          item.place.name
-                        }`,
-                        location: `${item.place.name} ${item.place.address}`,
-                        startTime: `${moment(
-                          `${item.date} ${item.time}`,
-                          'DD-MM-YYYY hh:mm A',
-                        ).format()}`,
-                        title: `Meeting with ${name}`,
-                      }}
-                    />
-                    <Popconfirm
-                      title={`Cancel meeting with ${name}?`}
-                      onConfirm={() => this.cancelMeeting(item.id)}
-                      okText="Yes"
-                      cancelText="No"
-                    >
-                      <Button className="btn" type="danger">
-                        Cancel Meeting
-                      </Button>
-                    </Popconfirm>
-                  </div>
-                </div>
-              </Skeleton>
-            );
-          })}
-        <div className="data-card no-data">
-          <h3>No Data</h3>
-        </div>
+                      <Card.Meta
+                        title={name}
+                        description={`${item.place.name} on ${item.date} at ${
+                          item.time
+                        }`}
+                      />
+                    </Card>
+                  </Skeleton>
+                );
+              })}
+            </Col>
+          ) : (
+            <Col span={24} style={{ textAlign: 'center' }}>
+              <h3>Yay! No new meeting requests!</h3>
+            </Col>
+          )}
+        </Row>
         <Modal
           style={{ top: 10 }}
           visible={mapVisible}
@@ -350,5 +367,4 @@ export default class MeetingsAccepted extends Component {
     );
   }
 }
-
 /* eslint react/prop-types: 0 */
