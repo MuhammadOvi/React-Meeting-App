@@ -1,13 +1,19 @@
 // Meetings Expired
+/* eslint react/prop-types: 0 */
 import React, { Component } from 'react';
 import ModalImage from 'react-modal-image';
 import { Icon, Button, message as Message, Skeleton } from 'antd';
+import { connect } from 'react-redux';
+import isLoggedIn from '../../Helper';
 import firebase from '../../Config/firebase';
 
 const Users = firebase.firestore().collection('Users');
 const Meetings = firebase.firestore().collection('Meetings');
 
-export default class MeetingsExpired extends Component {
+let unsubFirebaseSnapShot01;
+let unsubFirebaseSnapShot02;
+
+class MeetingsExpired extends Component {
   constructor(props) {
     super(props);
 
@@ -22,18 +28,28 @@ export default class MeetingsExpired extends Component {
   componentDidMount() {
     this.mounted = true;
 
+    const { history, user } = this.props;
+    isLoggedIn(history, user);
+
     this.checkExpiredMeetingsSetByMe();
     this.checkExpiredMeetingsSetForMe();
   }
 
   componentWillUnmount() {
     this.mounted = false;
+
+    unsubFirebaseSnapShot01();
+    unsubFirebaseSnapShot02();
   }
 
   checkExpiredMeetingsSetByMe = () => {
     if (!this.mounted) return;
+    const {
+      user: { uid },
+    } = this.props;
+
     this.setState({ screenLoading: true });
-    Meetings.where('setBy', '==', localStorage.getItem('uid'))
+    unsubFirebaseSnapShot01 = Meetings.where('setBy', '==', uid)
       .orderBy('updated', 'desc')
       .where('status', '==', 'expired')
       .where('expired', '==', 'pending')
@@ -48,8 +64,12 @@ export default class MeetingsExpired extends Component {
 
   checkExpiredMeetingsSetForMe = () => {
     if (!this.mounted) return;
+    const {
+      user: { uid },
+    } = this.props;
+
     this.setState({ screenLoading: true });
-    Meetings.where('setWith', '==', localStorage.getItem('uid'))
+    unsubFirebaseSnapShot02 = Meetings.where('setWith', '==', uid)
       .orderBy('updated', 'desc')
       .where('status', '==', 'expired')
       .where('expired', '==', 'pending')
@@ -68,8 +88,11 @@ export default class MeetingsExpired extends Component {
       expiredMeetingsSetForMe,
       otherUsersData,
     } = this.state;
+    const {
+      user: { uid: me },
+    } = this.props;
+
     const data = [...expiredMeetingsSetByMe, ...expiredMeetingsSetForMe];
-    const me = localStorage.getItem('uid');
 
     const idToFind = [];
 
@@ -115,9 +138,11 @@ export default class MeetingsExpired extends Component {
       otherUsersData,
       screenLoading,
     } = this.state;
+    const {
+      user: { uid: me },
+    } = this.props;
 
     const data = [...expiredMeetingsSetByMe, ...expiredMeetingsSetForMe];
-    const me = localStorage.getItem('uid');
 
     return (
       <div className="section" style={{ paddingTop: 50 }}>
@@ -208,4 +233,13 @@ export default class MeetingsExpired extends Component {
   }
 }
 
-/* eslint react/prop-types: 0 */
+const mapStateToProps = state => ({
+  user: state.authReducers.user,
+});
+
+const mapDispatchToProps = () => null;
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps,
+)(MeetingsExpired);

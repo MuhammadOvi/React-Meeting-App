@@ -1,4 +1,5 @@
 // Meetings Pending
+/* eslint react/prop-types: 0 */
 import React, { Component } from 'react';
 import ModalImage from 'react-modal-image';
 import {
@@ -10,13 +11,18 @@ import {
   Skeleton,
 } from 'antd';
 import moment from 'moment-timezone';
+import { connect } from 'react-redux';
+import isLoggedIn from '../../Helper';
 import firebase from '../../Config/firebase';
 import Map from '../../Component/MapDirection';
 
 const Users = firebase.firestore().collection('Users');
 const Meetings = firebase.firestore().collection('Meetings');
 
-export default class MeetingsPending extends Component {
+let unsubFirebaseSnapShot01;
+let unsubFirebaseSnapShot02;
+
+class MeetingsPending extends Component {
   constructor(props) {
     super(props);
 
@@ -33,18 +39,29 @@ export default class MeetingsPending extends Component {
 
   componentDidMount() {
     this.mounted = true;
+
+    const { history, user } = this.props;
+    isLoggedIn(history, user);
+
     this.checkUnseenMeetingsSetForMe();
     this.checkPendingMeetingsSetForMe();
   }
 
   componentWillUnmount() {
     this.mounted = false;
+
+    unsubFirebaseSnapShot01();
+    unsubFirebaseSnapShot02();
   }
 
   checkUnseenMeetingsSetForMe = () => {
     if (!this.mounted) return;
+    const {
+      user: { uid },
+    } = this.props;
+
     this.setState({ screenLoading: true });
-    Meetings.where('setWith', '==', localStorage.getItem('uid'))
+    unsubFirebaseSnapShot01 = Meetings.where('setWith', '==', uid)
       .orderBy('updated', 'desc')
       .where('status', '==', 'unseen')
       .onSnapshot(({ docs }) => {
@@ -59,8 +76,12 @@ export default class MeetingsPending extends Component {
 
   checkPendingMeetingsSetForMe = () => {
     if (!this.mounted) return;
+    const {
+      user: { uid },
+    } = this.props;
+
     this.setState({ screenLoading: true });
-    Meetings.where('setWith', '==', localStorage.getItem('uid'))
+    unsubFirebaseSnapShot02 = Meetings.where('setWith', '==', uid)
       .orderBy('updated', 'desc')
       .where('status', '==', 'pending')
       .onSnapshot(({ docs }) => {
@@ -79,8 +100,11 @@ export default class MeetingsPending extends Component {
       meetingsPendingSetForMe,
       otherUsersData,
     } = this.state;
+    const {
+      user: { uid: me },
+    } = this.props;
+
     const data = [...meetingsUnseenSetForMe, ...meetingsPendingSetForMe];
-    const me = localStorage.getItem('uid');
     const idToFind = [];
 
     for (let i = 0; i < data.length; i++) {
@@ -153,7 +177,9 @@ export default class MeetingsPending extends Component {
   };
 
   acceptMeeting = meetingID => {
-    const me = localStorage.getItem('uid');
+    const {
+      user: { uid: me },
+    } = this.props;
 
     Meetings.doc(meetingID)
       .update({
@@ -168,7 +194,9 @@ export default class MeetingsPending extends Component {
   };
 
   rejectMeeting = meetingID => {
-    const me = localStorage.getItem('uid');
+    const {
+      user: { uid: me },
+    } = this.props;
 
     Meetings.doc(meetingID)
       .update({
@@ -207,9 +235,11 @@ export default class MeetingsPending extends Component {
       coords,
       destination,
     } = this.state;
+    const {
+      user: { uid: me },
+    } = this.props;
 
     const data = [...meetingsUnseenSetForMe, ...meetingsPendingSetForMe];
-    const me = localStorage.getItem('uid');
 
     return (
       <div className="section" style={{ paddingTop: 50 }}>
@@ -334,4 +364,13 @@ export default class MeetingsPending extends Component {
   }
 }
 
-/* eslint react/prop-types: 0 */
+const mapStateToProps = state => ({
+  user: state.authReducers.user,
+});
+
+const mapDispatchToProps = () => null;
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps,
+)(MeetingsPending);

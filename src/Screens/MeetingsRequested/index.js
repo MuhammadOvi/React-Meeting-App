@@ -1,15 +1,21 @@
 // Meetings Requested
+/* eslint react/prop-types: 0 */
 import React, { Component } from 'react';
 import ModalImage from 'react-modal-image';
 import { Icon, Button, message as Message, Modal, Skeleton } from 'antd';
 import moment from 'moment-timezone';
+import { connect } from 'react-redux';
+import isLoggedIn from '../../Helper';
 import firebase from '../../Config/firebase';
 import Map from '../../Component/MapDirection';
 
 const Users = firebase.firestore().collection('Users');
 const Meetings = firebase.firestore().collection('Meetings');
 
-export default class MeetingsRequested extends Component {
+let unsubFirebaseSnapShot01;
+let unsubFirebaseSnapShot02;
+
+class MeetingsRequested extends Component {
   constructor(props) {
     super(props);
 
@@ -26,18 +32,29 @@ export default class MeetingsRequested extends Component {
 
   componentDidMount() {
     this.mounted = true;
+
+    const { history, user } = this.props;
+    isLoggedIn(history, user);
+
     this.checkUnseenMeetings();
     this.checkPendingMeetings();
   }
 
   componentWillUnmount() {
     this.mounted = false;
+
+    unsubFirebaseSnapShot01();
+    unsubFirebaseSnapShot02();
   }
 
   checkPendingMeetings = () => {
     if (!this.mounted) return;
+    const {
+      user: { uid },
+    } = this.props;
+
     this.setState({ screenLoading: true });
-    Meetings.where('setBy', '==', localStorage.getItem('uid'))
+    unsubFirebaseSnapShot01 = Meetings.where('setBy', '==', uid)
       .orderBy('updated', 'desc')
       .where('status', '==', 'pending')
       .onSnapshot(({ docs }) => {
@@ -52,8 +69,12 @@ export default class MeetingsRequested extends Component {
 
   checkUnseenMeetings = () => {
     if (!this.mounted) return;
+    const {
+      user: { uid },
+    } = this.props;
+
     this.setState({ screenLoading: true });
-    Meetings.where('setBy', '==', localStorage.getItem('uid'))
+    unsubFirebaseSnapShot02 = Meetings.where('setBy', '==', uid)
       .orderBy('updated', 'desc')
       .where('status', '==', 'unseen')
       .onSnapshot(({ docs }) => {
@@ -68,8 +89,11 @@ export default class MeetingsRequested extends Component {
 
   bringOtherUsersData = () => {
     const { meetingsUnseen, meetingsPending, otherUsersData } = this.state;
+    const {
+      user: { uid: me },
+    } = this.props;
+
     const data = [...meetingsUnseen, ...meetingsPending];
-    const me = localStorage.getItem('uid');
     const idToFind = [];
 
     for (let i = 0; i < data.length; i++) {
@@ -165,9 +189,11 @@ export default class MeetingsRequested extends Component {
       coords,
       destination,
     } = this.state;
+    const {
+      user: { uid: me },
+    } = this.props;
 
     const data = [...meetingsUnseen, ...meetingsPending];
-    const me = localStorage.getItem('uid');
 
     return (
       <div className="section" style={{ paddingTop: 50 }}>
@@ -275,4 +301,13 @@ export default class MeetingsRequested extends Component {
   }
 }
 
-/* eslint react/prop-types: 0 */
+const mapStateToProps = state => ({
+  user: state.authReducers.user,
+});
+
+const mapDispatchToProps = () => null;
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps,
+)(MeetingsRequested);
