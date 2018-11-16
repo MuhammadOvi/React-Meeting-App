@@ -5,7 +5,10 @@ import PropTypes from 'prop-types';
 import { Button, Icon, DatePicker, Popconfirm } from 'antd';
 import moment from 'moment-timezone';
 import AddToCalendar from 'react-add-to-calendar';
+import { connect } from 'react-redux';
+import { removeMeeting as RemoveMeeting } from '../../Redux/Actions';
 import firebase from '../../Config/firebase';
+import isLoggedIn from '../../Helper';
 
 const Meetings = firebase.firestore().collection('Meetings');
 
@@ -30,9 +33,8 @@ class MeetingTime extends Component {
 
   componentDidMount() {
     this.mounted = true;
-    const { history } = this.props;
-
-    const meeting = JSON.parse(localStorage.getItem('meeting'));
+    const { history, meeting, user } = this.props;
+    isLoggedIn(history, user);
 
     if (!meeting || Object.keys(meeting) < 1) {
       history.push('/home');
@@ -73,7 +75,8 @@ class MeetingTime extends Component {
     Meetings.doc(ref.id)
       .set({ ...data, id: ref.id })
       .then(() => {
-        localStorage.removeItem('meeting');
+        const { removeMeeting } = this.props;
+        removeMeeting();
         this.setState({
           btnLoading: false,
           meeting: { ...meeting, date, time },
@@ -83,14 +86,14 @@ class MeetingTime extends Component {
   };
 
   goHome = () => {
-    const { history } = this.props;
-    localStorage.removeItem('meeting');
+    const { history, removeMeeting } = this.props;
+    removeMeeting();
     history.push('/home');
   };
 
   cancelMeeting = () => {
-    const { history } = this.props;
-    localStorage.removeItem('meeting');
+    const { history, removeMeeting } = this.props;
+    removeMeeting();
     history.push('/home');
   };
 
@@ -219,5 +222,23 @@ class MeetingTime extends Component {
 MeetingTime.propTypes = {
   // eslint-disable-next-line
   history: PropTypes.object.isRequired,
+  // eslint-disable-next-line
+  meeting: PropTypes.object.isRequired,
+  removeMeeting: PropTypes.func.isRequired,
+  // eslint-disable-next-line
+  user: PropTypes.object.isRequired,
 };
-export default MeetingTime;
+
+const mapStateToProps = state => ({
+  meeting: state.meetingReducers.meeting,
+  user: state.authReducers.user,
+});
+
+const mapDispatchToProps = dispatch => ({
+  removeMeeting: () => dispatch(RemoveMeeting()),
+});
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps,
+)(MeetingTime);

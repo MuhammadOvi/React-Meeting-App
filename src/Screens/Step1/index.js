@@ -2,7 +2,10 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { Form, Icon, Input, Button, message as Message } from 'antd';
+import { connect } from 'react-redux';
+import { updateUserStatus as UpdateUserStatus } from '../../Redux/Actions';
 import firebase from '../../Config/firebase';
+import isLoggedIn from '../../Helper';
 
 const FormItem = Form.Item;
 const Users = firebase.firestore().collection('Users');
@@ -17,9 +20,8 @@ class Step1 extends Component {
   }
 
   componentDidMount() {
-    const { history } = this.props;
-
-    const status = localStorage.getItem('status');
+    const { history, user, status } = this.props;
+    isLoggedIn(history, user);
     if (status !== 'step0') history.push('/home');
   }
 
@@ -28,6 +30,8 @@ class Step1 extends Component {
     this.setState({ loading: true });
     const {
       form: { validateFields },
+      updateUserStatus,
+      user: { uid },
     } = this.props;
     validateFields((err, values) => {
       const { nickName, phone } = values;
@@ -39,12 +43,12 @@ class Step1 extends Component {
           return;
         }
 
-        Users.doc(localStorage.getItem('uid'))
+        Users.doc(uid)
           .update({ nickName, phone, status: 'step1' })
           .then(() => {
             const { history } = this.props;
             this.setState({ loading: false });
-            localStorage.setItem('status', 'step1');
+            updateUserStatus({ status: 'step1' });
             history.push('/profile/step2');
           })
           .catch(error => {
@@ -117,6 +121,24 @@ Step1.propTypes = {
   // eslint-disable-next-line
   history: PropTypes.object.isRequired,
   // eslint-disable-next-line
+  status: PropTypes.object.isRequired,
+  // eslint-disable-next-line
+  user: PropTypes.object.isRequired,
+  // eslint-disable-next-line
   form: PropTypes.object.isRequired,
+  updateUserStatus: PropTypes.func.isRequired,
 };
-export default Form.create()(Step1);
+
+const mapStateToProps = state => ({
+  status: state.homeReducers.status,
+  user: state.authReducers.user,
+});
+
+const mapDispatchToProps = dispatch => ({
+  updateUserStatus: status => dispatch(UpdateUserStatus(status)),
+});
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps,
+)(Form.create()(Step1));

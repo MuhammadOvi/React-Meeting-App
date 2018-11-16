@@ -2,7 +2,10 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { Form, Icon, Button, Upload, Modal, message as Message } from 'antd';
+import { connect } from 'react-redux';
+import { updateUserStatus as UpdateUserStatus } from '../../Redux/Actions';
 import firebase from '../../Config/firebase';
+import isLoggedIn from '../../Helper';
 
 const Storage = firebase.storage();
 const Users = firebase.firestore().collection('Users');
@@ -21,9 +24,8 @@ class Step2 extends Component {
   }
 
   componentDidMount() {
-    const { history } = this.props;
-
-    const status = localStorage.getItem('status');
+    const { history, user, status } = this.props;
+    isLoggedIn(history, user);
     if (status !== 'step1') history.push('/home');
   }
 
@@ -43,6 +45,10 @@ class Step2 extends Component {
 
   handleUpload = () => {
     const { fileList } = this.state;
+    const {
+      updateUserStatus,
+      user: { uid },
+    } = this.props;
 
     if (fileList.length > 3) {
       Message.error('Only 3 Images are allowed, please delete extras');
@@ -59,12 +65,10 @@ class Step2 extends Component {
     const userImages = [];
 
     // set it up
-    Storage.ref(
-      localStorage.getItem('uid'),
-    ).constructor.prototype.putFiles = files =>
+    Storage.ref(uid).constructor.prototype.putFiles = files =>
       Promise.all(
         files.map((file, index) =>
-          Storage.ref(localStorage.getItem('uid'))
+          Storage.ref(uid)
             .child(`${index + 1}`)
             .put(file)
             .then(res => {
@@ -76,15 +80,15 @@ class Step2 extends Component {
       );
 
     // use it!
-    Storage.ref(localStorage.getItem('uid'))
+    Storage.ref(uid)
       .putFiles(fileList)
       .then(() => {
-        Users.doc(localStorage.getItem('uid'))
+        Users.doc(uid)
           .update({ status: 'step2', userImages })
           .then(() => {
             const { history } = this.props;
             this.setState({ loading: false });
-            localStorage.setItem('status', 'step2');
+            updateUserStatus({ status: 'step2' });
             Message.success('Images Uploaded');
             setTimeout(() => {
               history.push('/profile/step3');
@@ -108,16 +112,18 @@ class Step2 extends Component {
     this.setState({ loading: true });
     const {
       form: { validateFields },
+      updateUserStatus,
+      user: { uid },
     } = this.props;
     validateFields((err, values) => {
       const { nickName, phone } = values;
       if (!err) {
-        Users.doc(localStorage.getItem('uid'))
+        Users.doc(uid)
           .update({ nickName, phone, status: 'step1' })
           .then(() => {
             const { history } = this.props;
             this.setState({ loading: false });
-            localStorage.setItem('status', 'step1');
+            updateUserStatus({ status: 'step1' });
             history.push('/profile/step2');
           })
           .catch(error => {
@@ -226,4 +232,17 @@ Step2.propTypes = {
   // eslint-disable-next-line
   form: PropTypes.object.isRequired,
 };
-export default Form.create()(Step2);
+
+const mapStateToProps = state => ({
+  status: state.homeReducers.status,
+  user: state.authReducers.user,
+});
+
+const mapDispatchToProps = dispatch => ({
+  updateUserStatus: status => dispatch(UpdateUserStatus(status)),
+});
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps,
+)(Form.create()(Step2));

@@ -12,5 +12,6 @@ module.exports = {
     'sort-keys': 1,
     'sort-vars': 1,
     'linebreak-style': 0,
+    // 'react/prop-types': 0,
   },
 };

@@ -4,7 +4,10 @@ import PropTypes from 'prop-types';
 import Swing from 'react-swing';
 import { Direction } from 'swing';
 import { Modal, Button } from 'antd';
+import { connect } from 'react-redux';
+import { setPersonToMeet as SetPersonToMeet } from '../../Redux/Actions';
 import StackCard from '../../Component/StackCard';
+import isLoggedIn from '../../Helper';
 
 const { confirm } = Modal;
 
@@ -24,8 +27,8 @@ class CardSwing extends Component {
   }
 
   componentDidMount() {
-    const { history } = this.props;
-    if (!localStorage.getItem('uid')) history.push('/');
+    const { history, user } = this.props;
+    isLoggedIn(history, user);
     console.clear();
   }
 
@@ -54,6 +57,7 @@ class CardSwing extends Component {
       history: {
         location: { state },
       },
+      setPersonToMeet,
     } = this.props;
 
     confirm({
@@ -66,7 +70,7 @@ class CardSwing extends Component {
           myData: state.myData,
         };
 
-        localStorage.setItem('personToMeet', JSON.stringify(personToMeet));
+        setPersonToMeet(personToMeet);
         history.push('/meeting/location');
       },
       title: `Want to meet ${matchingUsers[index].name}`,
@@ -150,7 +154,22 @@ CardSwing.propTypes = {
   // eslint-disable-next-line
   history: PropTypes.object.isRequired,
   // eslint-disable-next-line
+  user: PropTypes.object.isRequired,
+  // eslint-disable-next-line
   matchingUsers: PropTypes.array,
+  setPersonToMeet: PropTypes.func.isRequired,
 };
 
-export default CardSwing;
+const mapStateToProps = state => ({
+  personToMeet: state.meetingReducers.personToMeet,
+  user: state.authReducers.user,
+});
+
+const mapDispatchToProps = dispatch => ({
+  setPersonToMeet: personToMeet => dispatch(SetPersonToMeet(personToMeet)),
+});
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps,
+)(CardSwing);

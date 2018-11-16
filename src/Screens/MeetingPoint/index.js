@@ -3,8 +3,15 @@ import React, { Component } from 'react';
 import './style.css';
 import PropTypes from 'prop-types';
 import { Button, message as Message, Icon, Input, List, Modal } from 'antd';
+import { connect } from 'react-redux';
+import {
+  removePersonToMeet as RemovePersonToMeet,
+  setMeeting as SetMeeting,
+  removeMeeting as RemoveMeeting,
+} from '../../Redux/Actions';
 import { FSExplore, FSSearch } from '../../api/Foursquare';
 import Map from '../../Component/MapDirection';
+import isLoggedIn from '../../Helper';
 
 const { Search } = Input;
 
@@ -14,7 +21,6 @@ class MeetingPoint extends Component {
 
     this.state = {
       btnLoading: false,
-      coords: {},
       data: [],
       destination: {},
       listLoading: false,
@@ -28,9 +34,8 @@ class MeetingPoint extends Component {
 
   componentDidMount() {
     this.mounted = true;
-    const { history } = this.props;
-
-    const personToMeet = JSON.parse(localStorage.getItem('personToMeet'));
+    const { history, personToMeet, user } = this.props;
+    isLoggedIn(history, user);
 
     if (!personToMeet || Object.keys(personToMeet) < 1) {
       history.push('/home');
@@ -62,6 +67,11 @@ class MeetingPoint extends Component {
 
   selectPlace = place => {
     const { personToMeet } = this.state;
+    const {
+      user: { uid },
+      setMeeting,
+      removePersonToMeet,
+    } = this.props;
 
     this.setState({ btnLoading: true });
 
@@ -76,7 +86,7 @@ class MeetingPoint extends Component {
       },
       setBy: {
         avatar: personToMeet.myData.avatar,
-        id: localStorage.getItem('uid'),
+        id: uid,
         name: personToMeet.myData.name,
       },
       setWith: {
@@ -87,28 +97,24 @@ class MeetingPoint extends Component {
       },
     };
 
-    localStorage.setItem('meeting', JSON.stringify(meeting));
+    setMeeting(meeting);
     this.setState({ btnLoading: false });
-    localStorage.removeItem('personToMeet');
+    removePersonToMeet();
     const { history } = this.props;
     history.push('/meeting/time');
   };
 
   goHome = () => {
-    const { history } = this.props;
-    localStorage.removeItem('personToMeet');
+    const { history, removePersonToMeet } = this.props;
+    removePersonToMeet();
     history.push('/home');
   };
 
   showDirection = place => {
     const { lat, lng } = place;
-    const {
-      personToMeet: { coords },
-    } = this.state;
     this.setState({ mapVisible: true });
     const destination = { lat, lng };
     this.setState({
-      coords,
       destination,
       mapLoaded: true,
     });
@@ -119,9 +125,9 @@ class MeetingPoint extends Component {
   };
 
   cancelMeeting = () => {
-    const { history } = this.props;
-    localStorage.removeItem('meeting');
-    localStorage.removeItem('personToMeet');
+    const { history, removePersonToMeet, removeMeeting } = this.props;
+    removePersonToMeet();
+    removeMeeting();
     history.push('/home');
   };
 
@@ -325,5 +331,27 @@ class MeetingPoint extends Component {
 MeetingPoint.propTypes = {
   // eslint-disable-next-line
   history: PropTypes.object.isRequired,
+  removeMeeting: PropTypes.func.isRequired,
+  removePersonToMeet: PropTypes.func.isRequired,
+  setMeeting: PropTypes.func.isRequired,
+  // eslint-disable-next-line
+  user: PropTypes.object.isRequired,
+  // eslint-disable-next-line
+  personToMeet: PropTypes.object.isRequired,
 };
-export default MeetingPoint;
+
+const mapStateToProps = state => ({
+  personToMeet: state.meetingReducers.personToMeet,
+  user: state.authReducers.user,
+});
+
+const mapDispatchToProps = dispatch => ({
+  removeMeeting: () => dispatch(RemoveMeeting()),
+  removePersonToMeet: () => dispatch(RemovePersonToMeet()),
+  setMeeting: meeting => dispatch(SetMeeting(meeting)),
+});
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps,
+)(MeetingPoint);

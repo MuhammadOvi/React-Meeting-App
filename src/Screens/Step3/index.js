@@ -2,7 +2,10 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { Form, Button, Select, message as Message } from 'antd';
+import { connect } from 'react-redux';
+import { updateUserStatus as UpdateUserStatus } from '../../Redux/Actions';
 import firebase from '../../Config/firebase';
+import isLoggedIn from '../../Helper';
 
 const FormItem = Form.Item;
 const { Option } = Select;
@@ -18,9 +21,8 @@ class Step3 extends Component {
   }
 
   componentDidMount() {
-    const { history } = this.props;
-
-    const status = localStorage.getItem('status');
+    const { history, user, status } = this.props;
+    isLoggedIn(history, user);
     if (status !== 'step2') history.push('/home');
   }
 
@@ -29,16 +31,18 @@ class Step3 extends Component {
     this.setState({ loading: true });
     const {
       form: { validateFields },
+      updateUserStatus,
+      user: { uid },
     } = this.props;
     validateFields((err, values) => {
       const { beverages, duration } = values;
       if (!err) {
-        Users.doc(localStorage.getItem('uid'))
+        Users.doc(uid)
           .update({ beverages, duration, status: 'step3' })
           .then(() => {
             const { history } = this.props;
             this.setState({ loading: false });
-            localStorage.setItem('status', 'step3');
+            updateUserStatus({ status: 'step3' });
             history.push('/profile/step4');
           })
           .catch(error => {
@@ -152,6 +156,24 @@ Step3.propTypes = {
   // eslint-disable-next-line
   history: PropTypes.object.isRequired,
   // eslint-disable-next-line
+  user: PropTypes.object.isRequired,
+  // eslint-disable-next-line
+  status: PropTypes.object.isRequired,
+  // eslint-disable-next-line
   form: PropTypes.object.isRequired,
+  updateUserStatus: PropTypes.func.isRequired,
 };
-export default Form.create()(Step3);
+
+const mapStateToProps = state => ({
+  status: state.homeReducers.status,
+  user: state.authReducers.user,
+});
+
+const mapDispatchToProps = dispatch => ({
+  updateUserStatus: status => dispatch(UpdateUserStatus(status)),
+});
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps,
+)(Form.create()(Step3));

@@ -3,6 +3,8 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import './style.css';
 import { Icon, message as Message } from 'antd';
+import { connect } from 'react-redux';
+import { updateUser as UpdateUser } from '../../Redux/Actions';
 import logo from '../../sources/img/logo.png';
 import isLoggedIn from '../../Helper';
 import firebase from '../../Config/firebase';
@@ -22,8 +24,8 @@ class Login extends Component {
   componentDidMount() {
     this.mounted = true;
 
-    const { history } = this.props;
-    isLoggedIn(history);
+    const { history, updateUser, user: User } = this.props;
+    isLoggedIn(history, User);
 
     firebase.auth().onAuthStateChanged(user => {
       if (user) {
@@ -33,16 +35,17 @@ class Login extends Component {
             { merge: true },
           )
           .then(() => {
-            localStorage.setItem('uid', user.uid);
+            updateUser({ name: user.displayName, uid: user.uid });
             history.push('/home');
           })
           .catch(err => {
             Message.error('Something Went Wrong! See console for log.');
-            console.log('ERROR => ', err);
+            console.log('ERROR 01 => ', err);
           });
       }
       if (!user && this.mounted) {
         this.setState({ disabled: false });
+        updateUser({});
       }
     });
   }
@@ -52,6 +55,7 @@ class Login extends Component {
   }
 
   loginUser = () => {
+    const { updateUser } = this.props;
     this.setState({ disabled: true });
 
     firebase
@@ -59,16 +63,17 @@ class Login extends Component {
       .signInWithPopup(provider)
       .then(result => {
         const { user } = result;
-        localStorage.setItem('uid', user.uid);
-        localStorage.setItem('name', user.displayName);
         // const token = result.credential.accessToken;
-        setTimeout(() => {
-          if (this.mounted) this.setState({ disabled: false });
-        }, 5000);
+        updateUser({ name: user.displayName, uid: user.uid });
+        // setTimeout(() => {
+        //   if (this.mounted) this.setState({ disabled: false });
+        // }, 5000);
       })
       .catch(err => {
-        Message.error('Something Went Wrong! See console for log.');
-        console.log('ERROR => ', err);
+        if (err.code === 'auth/network-request-failed')
+          Message.error('No Internet or Network Error');
+        else Message.error('Something Went Wrong! See console for log.');
+        console.log('ERROR 02 => ', err);
         this.setState({ disabled: false });
       });
   };
@@ -107,6 +112,20 @@ class Login extends Component {
 Login.propTypes = {
   // eslint-disable-next-line
   history: PropTypes.object.isRequired,
+  updateUser: PropTypes.func.isRequired,
+  // eslint-disable-next-line
+  user: PropTypes.object.isRequired,
 };
 
-export default Login;
+const mapStateToProps = state => ({
+  user: state.authReducers.user,
+});
+
+const mapDispatchToProps = dispatch => ({
+  updateUser: user => dispatch(UpdateUser(user)),
+});
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps,
+)(Login);

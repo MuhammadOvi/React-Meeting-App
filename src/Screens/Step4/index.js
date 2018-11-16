@@ -2,8 +2,11 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { Button, message as Message } from 'antd';
+import { connect } from 'react-redux';
+import { updateUserStatus as UpdateUserStatus } from '../../Redux/Actions';
 import Map from '../../Component/Map';
 import firebase from '../../Config/firebase';
+import isLoggedIn from '../../Helper';
 import MapAPI from '../../api/GoogleMap';
 
 const Users = firebase.firestore().collection('Users');
@@ -20,12 +23,9 @@ class Step4 extends Component {
 
   componentDidMount() {
     this.mounted = true;
-    const { history } = this.props;
-
-    const status = localStorage.getItem('status');
+    const { history, user, status } = this.props;
+    isLoggedIn(history, user);
     if (status !== 'step3') history.push('/home');
-
-    // this.setLocation();
   }
 
   componentWillUnmount() {
@@ -49,16 +49,20 @@ class Step4 extends Component {
     e.preventDefault();
 
     const { coords } = this.state;
+    const {
+      history,
+      updateUserStatus,
+      user: { uid },
+    } = this.props;
     if (!coords) return Message.error('Select a different Location');
 
     this.setState({ loading: true });
 
-    Users.doc(localStorage.getItem('uid'))
+    Users.doc(uid)
       .update({ coords, status: 'completed' })
       .then(() => {
-        const { history } = this.props;
         this.setState({ loading: false });
-        localStorage.setItem('status', 'completed');
+        updateUserStatus({ status: 'completed' });
         history.push('/home');
       })
       .catch(err => {
@@ -134,5 +138,23 @@ class Step4 extends Component {
 Step4.propTypes = {
   // eslint-disable-next-line
   history: PropTypes.object.isRequired,
+  // eslint-disable-next-line
+  user: PropTypes.object.isRequired,
+  // eslint-disable-next-line
+  status: PropTypes.object.isRequired,
+  updateUserStatus: PropTypes.func.isRequired,
 };
-export default Step4;
+
+const mapStateToProps = state => ({
+  status: state.homeReducers.status,
+  user: state.authReducers.user,
+});
+
+const mapDispatchToProps = dispatch => ({
+  updateUserStatus: status => dispatch(UpdateUserStatus(status)),
+});
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps,
+)(Step4);

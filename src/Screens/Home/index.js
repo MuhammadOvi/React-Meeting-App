@@ -13,11 +13,21 @@ import {
   List,
   Badge,
 } from 'antd';
+import { connect } from 'react-redux';
+import {
+  updateUser as UpdateUser,
+  clearState as ClearState,
+  updateUserStatus as UpdateUserStatus,
+} from '../../Redux/Actions';
 import isLoggedIn from '../../Helper';
 import firebase from '../../Config/firebase';
 
 const Users = firebase.firestore().collection('Users');
 const Meetings = firebase.firestore().collection('Meetings');
+
+let unsubFirebaseSnapShot01;
+let unsubFirebaseSnapShot02;
+let unsubFirebaseSnapShot03;
 
 const addMeetingBtn = {
   background: '#C2185B',
@@ -52,11 +62,10 @@ class Home extends Component {
   componentDidMount() {
     this.mounted = true;
 
-    const { history } = this.props;
-    isLoggedIn(history);
+    const { history, user, updateUserStatus } = this.props;
+    isLoggedIn(history, user);
 
-    const uid = localStorage.getItem('uid');
-
+    const { uid } = user;
     if (!uid) return;
     Users.doc(uid)
       .get()
@@ -80,8 +89,8 @@ class Home extends Component {
             screenLoading: false,
           });
         } else {
-          localStorage.setItem('status', status);
-          if (!status) localStorage.setItem('status', 'step0');
+          updateUserStatus({ status });
+          if (!status) updateUserStatus({ status: 'step0' });
 
           if (!status) history.push('/profile/step1');
           else if (status === 'step1') history.push('/profile/step2');
@@ -106,6 +115,9 @@ class Home extends Component {
 
   componentWillUnmount() {
     this.mounted = false;
+    unsubFirebaseSnapShot01();
+    unsubFirebaseSnapShot02();
+    unsubFirebaseSnapShot03();
   }
 
   checkAll = () => {
@@ -116,9 +128,12 @@ class Home extends Component {
 
   checkMeetingsSetByMe = () => {
     if (!this.mounted) return;
+    const {
+      user: { uid },
+    } = this.props;
     this.setState({ screenLoading: true });
 
-    Meetings.where('setBy', '==', localStorage.getItem('uid')).onSnapshot(
+    unsubFirebaseSnapShot01 = Meetings.where('setBy', '==', uid).onSnapshot(
       ({ docs }) => {
         // setting all the meetingsSetByMe in one place
         const meetingsSetByMe = docs.map(item => item.data());
@@ -130,9 +145,12 @@ class Home extends Component {
 
   checkMeetingsSetForMe = () => {
     if (!this.mounted) return;
+    const {
+      user: { uid },
+    } = this.props;
     this.setState({ screenLoading: true });
 
-    Meetings.where('setWith', '==', localStorage.getItem('uid')).onSnapshot(
+    unsubFirebaseSnapShot02 = Meetings.where('setWith', '==', uid).onSnapshot(
       ({ docs }) => {
         // setting all the meetingsSetForMe in one place
         const meetingsSetForMe = docs.map(item => item.data());
@@ -144,10 +162,13 @@ class Home extends Component {
 
   checkNotifications = () => {
     if (!this.mounted) return;
+    const {
+      user: { uid },
+    } = this.props;
     this.setState({ screenLoading: true });
 
-    Meetings.where('status', '==', 'unseen')
-      .where('setWith', '==', localStorage.getItem('uid'))
+    unsubFirebaseSnapShot03 = Meetings.where('status', '==', 'unseen')
+      .where('setWith', '==', uid)
       .onSnapshot(({ docs }) => {
         const notifications = docs.map(item => item.data());
         if (this.mounted);
@@ -186,14 +207,15 @@ class Home extends Component {
   // Filter users that matches duration of meeting
   filterDuration = beveragesMatchingUsers => {
     const { duration, myData } = this.state;
+    const {
+      user: { uid },
+    } = this.props;
 
     let matchingUsers = [];
 
     for (let i = 0; i < duration.length; i++) {
       const newData = beveragesMatchingUsers.filter(
-        user =>
-          user.duration.includes(duration[i]) &&
-          user.uid !== localStorage.getItem('uid'),
+        user => user.duration.includes(duration[i]) && user.uid !== uid,
       );
       matchingUsers = [...matchingUsers, ...newData];
     }
@@ -218,7 +240,7 @@ class Home extends Component {
 
   // logout
   logout = () => {
-    const { history } = this.props;
+    const { history, clearState } = this.props;
     if (!this.mounted) return;
     this.setState({ screenLoading: true });
 
@@ -226,7 +248,7 @@ class Home extends Component {
       .auth()
       .signOut()
       .then(() => {
-        localStorage.clear();
+        clearState();
         history.push('/');
       })
       .catch(err => {
@@ -240,8 +262,11 @@ class Home extends Component {
   // just for development
   devReData = () => {
     if (!this.mounted) return;
+    const {
+      user: { uid },
+    } = this.props;
     this.setState({ screenLoading: true });
-    Users.doc(localStorage.getItem('uid'))
+    Users.doc(uid)
       .update({ status: '' })
       .then(() => {
         if (!this.mounted) return;
@@ -293,6 +318,10 @@ class Home extends Component {
       screenLoading,
     } = this.state;
 
+    const {
+      user: { uid: me },
+    } = this.props;
+
     const menu = (
       <Menu>
         <Menu.Item key="0" disabled>
@@ -310,8 +339,6 @@ class Home extends Component {
         </Menu.Item>
       </Menu>
     );
-
-    const me = localStorage.getItem('uid');
 
     const allMeetings = [...meetingsSetByMe, ...meetingsSetForMe];
 
@@ -341,13 +368,13 @@ class Home extends Component {
 
     const pendingMeetings = allMeetings.filter(
       elem =>
-        elem.setWith === localStorage.getItem('uid') &&
+        elem.setWith === me &&
         (elem.status === 'pending' || elem.status === 'unseen'),
     );
 
     const requestedMeetings = allMeetings.filter(
       elem =>
-        elem.setBy === localStorage.getItem('uid') &&
+        elem.setBy === me &&
         (elem.status === 'pending' || elem.status === 'unseen'),
     );
 
@@ -484,8 +511,27 @@ class Home extends Component {
 }
 
 Home.propTypes = {
+  clearState: PropTypes.func.isRequired,
   // eslint-disable-next-line
   history: PropTypes.object.isRequired,
+  updateUserStatus: PropTypes.func.isRequired,
+  // eslint-disable-next-line
+  user: PropTypes.object.isRequired,
 };
-export default Home;
+
+const mapStateToProps = state => ({
+  status: state.homeReducers.status,
+  user: state.authReducers.user,
+});
+
+const mapDispatchToProps = dispatch => ({
+  clearState: () => dispatch(ClearState()),
+  updateUser: user => dispatch(UpdateUser(user)),
+  updateUserStatus: status => dispatch(UpdateUserStatus(status)),
+});
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps,
+)(Home);
 /* eslint no-loop-func: 0 */

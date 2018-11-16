@@ -1,14 +1,12 @@
-const isLoggedIn = history => {
-  if (!localStorage.getItem('uid')) {
+const isLoggedIn = (history, { uid }) => {
+  if (!uid) {
     history.push('/');
     return;
   }
 
-  if (history.location.pathname === '/home') {
-    return;
+  if (history.location.pathname === '/') {
+    history.push('/home');
   }
-
-  history.push('/home');
 };
 
 export default isLoggedIn;
