@@ -368,7 +368,7 @@ const mapStateToProps = state => ({
   user: state.authReducers.user,
 });
 
-const mapDispatchToProps = () => null;
+const mapDispatchToProps = () => ({});
 
 export default connect(
   mapStateToProps,
