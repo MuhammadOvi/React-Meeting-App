@@ -16,6 +16,7 @@ import {
   MeetingsExpired,
   MeetingsPending,
   MeetingsRequested,
+  MyProfile,
   Notifications,
   Step1,
   Step2,
@@ -37,7 +38,7 @@ class App extends Component {
             <Route exact path="/" component={Login} />
             <Route exact path="/home" component={Home} />
 
-            <Route exact path="/profile" component={Home} />
+            <Route exact path="/profile" component={MyProfile} />
             <Route exact path="/profile/step1" component={Step1} />
             <Route exact path="/profile/step2" component={Step2} />
             <Route exact path="/profile/step3" component={Step3} />

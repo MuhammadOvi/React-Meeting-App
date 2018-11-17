@@ -301,6 +301,9 @@ class Home extends Component {
       case 'REQUESTED':
         history.push('/meetings/requested');
         break;
+      case 'PROFILE':
+        history.push('/profile');
+        break;
       case 'NOTIFICATION':
         history.push('/notifications');
         break;
@@ -324,7 +327,7 @@ class Home extends Component {
 
     const menu = (
       <Menu>
-        <Menu.Item key="0" disabled>
+        <Menu.Item key="0" onClick={() => this.switchPage('PROFILE')}>
           My Profile
         </Menu.Item>
         <Menu.Divider />
@@ -335,7 +338,7 @@ class Home extends Component {
           Reset Profile (Dev.)
         </Menu.Item>
         <Menu.Item key="3" disabled>
-          App v0.10
+          App v0.11 (Beta)
         </Menu.Item>
       </Menu>
     );

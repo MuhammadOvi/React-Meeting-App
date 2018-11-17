@@ -10,6 +10,7 @@ import MeetingsDone from './MeetingsDone';
 import MeetingsExpired from './MeetingsExpired';
 import MeetingsPending from './MeetingsPending';
 import MeetingsRequested from './MeetingsRequested';
+import MyProfile from './MyProfile';
 import Notifications from './Notifications';
 import Step1 from './Step1';
 import Step2 from './Step2';
@@ -29,6 +30,7 @@ export {
   MeetingsExpired,
   MeetingsPending,
   MeetingsRequested,
+  MyProfile,
   Notifications,
   Step1,
   Step2,

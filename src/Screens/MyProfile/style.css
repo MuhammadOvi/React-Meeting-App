@@ -1,0 +1,13 @@
+@media screen and (max-width: 480px) {
+  .ant-upload-list-item {
+    margin: 5px !important;
+    width: calc(33% - 10px) !important;
+    height: auto !important;
+    padding: 3px !important;
+  }
+  .ant-upload {
+    margin: 5px !important;
+    width: calc(100% - 10px) !important;
+    min-height: 100px !important;
+  }
+}
