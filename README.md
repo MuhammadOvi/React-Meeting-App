@@ -2,9 +2,9 @@
 # Meeting App Using ReactJS
 Here&apos;s a list of features included.
 
-- Frontend: <b>React</b>
-- Routing: <b>React Router</b>
-- Backend: <b>Firebase/Firestore</b>
+- Frontend: [**React**](https://reactjs.org)
+- Routing: [**React Router**](https://www.npmjs.com/package/react-router)
+- Backend: [**Firebase**](https://firebase.google.com)/[**Firestore**](https://firebase.google.com/docs/firestore)
 
 ------------
 
